@@ -76,9 +76,9 @@ jobs:
         run: |
           set -eo pipefail
           python3 - <<'PY'
-          import json
+          import json, os
           m = json.load(open("altstore-source.json"))
-          size = ${IPA_SIZE}
+          size = int(os.environ["IPA_SIZE"])
           app = m["apps"][0]
           app["size"] = size
           for v in app.get("versions", []):
