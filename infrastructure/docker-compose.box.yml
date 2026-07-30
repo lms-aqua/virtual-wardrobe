@@ -1,0 +1,106 @@
+# Deployment compose for the LostHosting Ubuntu box.
+#   - Joins the shared `auth_authnet` network so Caddy can reverse-proxy to the
+#     api/minio containers by name (no host ports published — safer on a shared
+#     host, nothing conflicts, nothing publicly exposed except via Caddy).
+#   - Fixed container names so the Caddy vhosts can target them.
+# Run from infrastructure/:  docker compose -f docker-compose.box.yml up -d --build
+name: virtual-wardrobe
+
+networks:
+  internal:
+  auth_authnet:
+    external: true
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wardrobe-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wardrobe}
+      POSTGRES_USER: ${POSTGRES_USER:-wardrobe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wardrobe}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: wardrobe-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./data/redis:/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: wardrobe-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?set in .env}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?set in .env}
+    volumes:
+      - ./data/minio:/data
+    networks: [internal, auth_authnet]   # auth_authnet so Caddy reaches it
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks: [internal]
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY} ${S3_SECRET_KEY} &&
+      mc mb --ignore-existing local/${S3_BUCKET_SCANS:-vw-scans-private} &&
+      mc mb --ignore-existing local/${S3_BUCKET_AVATARS:-vw-avatars-private} &&
+      mc mb --ignore-existing local/${S3_BUCKET_GARMENTS:-vw-garments-private} &&
+      echo 'Private buckets ready (no anonymous policy set).'
+      "
+
+  api:
+    build:
+      context: ../apps/api
+    container_name: wardrobe-api
+    restart: unless-stopped
+    env_file: [../.env]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks: [internal, auth_authnet]   # auth_authnet so Caddy reaches it
+    command: uvicorn wardrobe_core.main:app --host 0.0.0.0 --port 8000
+
+  worker:
+    build:
+      context: ../apps/api
+    container_name: wardrobe-worker
+    restart: unless-stopped
+    env_file: [../.env]
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks: [internal]
+    command: dramatiq wardrobe_core.worker:broker --processes 2 --threads 4

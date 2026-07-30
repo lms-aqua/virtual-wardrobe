@@ -53,13 +53,17 @@ class S3Storage:
         s = get_settings()
         self._ttl = s.s3_signed_url_ttl_seconds
         self._public_endpoint = s.s3_public_endpoint_url
+        # Path-style addressing is required for MinIO / any non-AWS host behind a
+        # reverse proxy: URLs become <endpoint>/<bucket>/<key> instead of
+        # <bucket>.<endpoint>/<key> (which would need wildcard DNS + TLS).
+        cfg = BotoConfig(signature_version="s3v4", s3={"addressing_style": "path"})
         self._client = boto3.client(
             "s3",
             endpoint_url=s.s3_endpoint_url,
             region_name=s.s3_region,
             aws_access_key_id=s.s3_access_key,
             aws_secret_access_key=s.s3_secret_key,
-            config=BotoConfig(signature_version="s3v4"),
+            config=cfg,
         )
         self._public_client = boto3.client(
             "s3",
@@ -67,7 +71,7 @@ class S3Storage:
             region_name=s.s3_region,
             aws_access_key_id=s.s3_access_key,
             aws_secret_access_key=s.s3_secret_key,
-            config=BotoConfig(signature_version="s3v4"),
+            config=cfg,
         )
 
     def presign_post(self, bucket: str, key: str, content_type: str, max_bytes: int) -> dict:
