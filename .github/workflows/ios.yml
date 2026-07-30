@@ -38,14 +38,17 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Set build version (monotonic, so AltStore sees updates)
+      - name: Set build version from the AltStore manifest
         run: |
           set -eo pipefail
-          VERSION="0.1.${{ github.run_number }}"
+          # Single source of truth: apps/ios/altstore-source.json. The .ipa's
+          # CFBundleShortVersionString MUST match the manifest version, or
+          # AltStore will loop / mis-detect updates.
+          VERSION=$(python3 -c "import json;print(json.load(open('altstore-source.json'))['apps'][0]['version'])")
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" Info-generated.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" Info-generated.plist
-          echo "Built version $VERSION"
+          echo "Building version $VERSION (build ${{ github.run_number }})"
 
       - name: Build (device SDK, no signing)
         run: |
@@ -69,49 +72,20 @@ jobs:
           zip -qry VirtualWardrobe-unsigned.ipa Payload
           echo "IPA_SIZE=$(stat -f%z VirtualWardrobe-unsigned.ipa)" >> "$GITHUB_ENV"
 
-      - name: Generate AltStore source manifest
+      - name: Inject real .ipa size into the manifest copy
         run: |
           set -eo pipefail
-          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          BASE="https://github.com/${{ github.repository }}/releases/download/ios-latest"
-          cat > altstore-source.json <<EOF
-          {
-            "name": "Virtual Wardrobe",
-            "identifier": "com.lostmedia.virtualwardrobe.source",
-            "sourceURL": "$BASE/altstore-source.json",
-            "website": "https://github.com/${{ github.repository }}",
-            "tintColor": "6D5EFC",
-            "apps": [
-              {
-                "name": "Virtual Wardrobe",
-                "bundleIdentifier": "com.lostmedia.virtualwardrobe",
-                "developerName": "Lost Media Studios",
-                "subtitle": "Private virtual try-on wardrobe",
-                "localizedDescription": "Build a personalized 3D avatar from a guided 360 body scan and try on digital clothing. Privacy-first: adults-only consent, private storage, no face recognition, one-tap delete.",
-                "iconURL": "$BASE/icon.png",
-                "tintColor": "6D5EFC",
-                "category": "lifestyle",
-                "version": "$VERSION",
-                "versionDate": "$DATE",
-                "versionDescription": "360 multi-frame body capture; connects to the live backend.",
-                "downloadURL": "$BASE/VirtualWardrobe-unsigned.ipa",
-                "size": ${IPA_SIZE},
-                "versions": [
-                  {
-                    "version": "$VERSION",
-                    "date": "$DATE",
-                    "localizedDescription": "360 multi-frame body capture; connects to the live backend.",
-                    "downloadURL": "$BASE/VirtualWardrobe-unsigned.ipa",
-                    "size": ${IPA_SIZE},
-                    "minOSVersion": "17.0"
-                  }
-                ]
-              }
-            ],
-            "news": []
-          }
-          EOF
-          echo "--- manifest ---"; cat altstore-source.json
+          python3 - <<'PY'
+          import json
+          m = json.load(open("altstore-source.json"))
+          size = ${IPA_SIZE}
+          app = m["apps"][0]
+          app["size"] = size
+          for v in app.get("versions", []):
+              v["size"] = size
+          json.dump(m, open("altstore-source.json", "w"), indent=2)
+          print("manifest size set to", size)
+          PY
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4

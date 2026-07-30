@@ -1,7 +1,7 @@
 {
   "name": "Virtual Wardrobe",
   "identifier": "com.lostmedia.virtualwardrobe.source",
-  "sourceURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/altstore-source.json",
+  "sourceURL": "https://raw.githubusercontent.com/lms-aqua/virtual-wardrobe/main/apps/ios/altstore-source.json",
   "website": "https://github.com/lms-aqua/virtual-wardrobe",
   "tintColor": "6D5EFC",
   "apps": [
@@ -10,18 +10,23 @@
       "bundleIdentifier": "com.lostmedia.virtualwardrobe",
       "developerName": "Lost Media Studios",
       "subtitle": "Private virtual try-on wardrobe",
-      "localizedDescription": "Build a personalized 3D avatar from a guided body scan and try on digital clothing. Privacy-first: adults-only consent, private storage, no face recognition, one-tap delete. Avatar generation is a clearly-labeled mock in this build.",
-      "iconURL": "https://raw.githubusercontent.com/lms-aqua/virtual-wardrobe/main/apps/ios/icon.png",
+      "localizedDescription": "Build a personalized 3D avatar from a guided 360° body scan and try on digital clothing. Privacy-first: adults-only consent, private storage, no face recognition, one-tap delete.",
+      "iconURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/icon.png",
       "tintColor": "6D5EFC",
       "category": "lifestyle",
+      "version": "0.1.1",
+      "versionDate": "2026-07-30T21:00:00-04:00",
+      "versionDescription": "360° multi-frame body capture, live backend by default, and a new app icon.",
+      "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+      "size": 411466,
       "versions": [
         {
-          "version": "0.1.0",
-          "date": "2026-07-30T00:00:00-04:00",
+          "version": "0.1.1",
+          "date": "2026-07-30T21:00:00-04:00",
+          "localizedDescription": "What's new in 0.1.1:\n• 360° multi-frame body capture (replaces the 4-photo flow) with a live progress ring — turn slowly and it grabs ~24 frames\n• Connects to the live backend by default (wardrobe-api.losthosting.com) — no server setup needed\n• New app icon\n• Backend now accepts many frames per scan",
           "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
-          "size": 0,
-          "minOSVersion": "17.0",
-          "localizedDescription": "Initial sideload build: magic-link auth, guided body capture, avatar, wardrobe, privacy controls."
+          "size": 411466,
+          "minOSVersion": "17.0"
         }
       ]
     }
