@@ -1,0 +1,9 @@
+# Normalize line endings. Force LF for everything so shell blocks in CI
+# workflows and scripts run correctly on Linux/macOS runners.
+* text=auto eol=lf
+
+# Explicit binaries (none yet, but future assets):
+*.png binary
+*.glb binary
+*.usdz binary
+*.ipa binary
