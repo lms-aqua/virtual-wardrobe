@@ -5,10 +5,9 @@ import Foundation
 enum AppConfig {
     static let baseURLKey = "vw.apiBaseURL"
 
-    /// Change this default to your deployed domain, e.g.
-    /// "https://api.virtualwardrobe.app". For the iOS Simulator hitting a local
-    /// backend use "http://localhost:8000" (ATS exception is set in Info.plist).
-    static let defaultBaseURL = "https://api.virtualwardrobe.app"
+    /// Live backend on the LostHosting box. Override in-app via Settings for
+    /// local dev (e.g. "http://localhost:8000" on the Simulator).
+    static let defaultBaseURL = "https://wardrobe-api.losthosting.com"
 
     static var baseURL: URL {
         let stored = UserDefaults.standard.string(forKey: baseURLKey)

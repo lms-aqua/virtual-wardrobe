@@ -151,9 +151,9 @@ class ScanImage(Base, TimestampMixin):
     scan_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("body_scans.id", ondelete="CASCADE"), index=True, nullable=False
     )
-    view: Mapped[enums.ScanView] = mapped_column(
-        Enum(enums.ScanView, native_enum=False, length=8), nullable=False
-    )
+    # Free-form label: one of the classic views (front/left/back/right) OR a
+    # 360°-capture frame id like "frame_0007". Kept unique per scan.
+    view: Mapped[str] = mapped_column(String(32), nullable=False)
     object_key: Mapped[str] = mapped_column(String(512), nullable=False)
     mime: Mapped[str | None] = mapped_column(String(64), nullable=True)
     bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)

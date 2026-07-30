@@ -2,22 +2,35 @@ import SwiftUI
 
 @MainActor
 final class ScanFlowModel: ObservableObject {
-    @Published var index = 0
+    enum Phase { case idle, countdown, capturing, uploading, processing }
+
+    @Published var phase: Phase = .idle
+    @Published var captured = 0
+    @Published var uploaded = 0
     @Published var countdown: Int? = nil
-    @Published var busy = false
-    @Published var status = "Position yourself in the frame"
+    @Published var status = "Stand back so your whole body fits in the frame."
     @Published var error: String?
     @Published var completedJobId: String?
 
-    let views = ScanView.allCases
+    /// Number of frames captured across a full 360° turn. More frames = more
+    /// angular coverage for the (future) reconstruction pipeline.
+    let targetFrames = 24
+
+    private var frames: [Data] = []
     private var scanId: String?
     private var api = APIClient(token: nil)
     private var started = false
 
     func setAPI(_ api: APIClient) { self.api = api }
 
-    var currentView: ScanView { views[min(index, views.count - 1)] }
-    var progress: Double { Double(index) / Double(views.count) }
+    var progress: Double {
+        switch phase {
+        case .capturing: return Double(captured) / Double(targetFrames)
+        case .uploading: return Double(uploaded) / Double(max(1, frames.count))
+        case .processing: return 1
+        default: return 0
+        }
+    }
 
     func begin() async {
         guard !started else { return }
@@ -30,35 +43,51 @@ final class ScanFlowModel: ObservableObject {
         }
     }
 
-    func captureCurrent(_ camera: CameraController) async {
-        guard let scanId, !busy else { return }
-        busy = true; error = nil
-        defer { busy = false }
+    func run360(_ camera: CameraController) async {
+        guard let scanId, phase == .idle else { return }
+        error = nil
         do {
+            // 3-2-1 so the user can get into position and start turning.
+            phase = .countdown
             for n in stride(from: 3, through: 1, by: -1) {
                 countdown = n
-                try? await Task.sleep(nanoseconds: 700_000_000)
+                try? await Task.sleep(nanoseconds: 800_000_000)
             }
             countdown = nil
-            status = "Capturing \(currentView.rawValue)…"
-            let jpeg = try await camera.capture()
 
-            status = "Uploading \(currentView.rawValue)…"
-            let presigned = try await api.uploadURL(
-                scanId: scanId, view: currentView.rawValue, contentType: "image/jpeg")
-            try await api.uploadToPresigned(presigned, imageData: jpeg)
-
-            if index + 1 < views.count {
-                index += 1
-                status = "Great! Now the \(currentView.rawValue) view."
-            } else {
-                status = "Building your avatar…"
-                let done = try await api.completeScan(scanId: scanId)
-                completedJobId = done.jobId
+            // Capture frames as the user slowly rotates.
+            phase = .capturing
+            frames.removeAll()
+            for i in 0..<targetFrames {
+                status = "Keep turning slowly… \(i + 1)/\(targetFrames)"
+                let jpeg = try await camera.capture()
+                frames.append(jpeg)
+                captured = i + 1
+                try? await Task.sleep(nanoseconds: 350_000_000)
             }
+
+            // Upload every frame.
+            phase = .uploading
+            for (i, jpeg) in frames.enumerated() {
+                status = "Uploading frames… \(i + 1)/\(frames.count)"
+                let view = String(format: "frame_%04d", i)
+                let presigned = try await api.uploadURL(
+                    scanId: scanId, view: view, contentType: "image/jpeg")
+                try await api.uploadToPresigned(presigned, imageData: jpeg)
+                uploaded = i + 1
+            }
+
+            // Kick off avatar generation.
+            phase = .processing
+            status = "Building your avatar…"
+            let done = try await api.completeScan(scanId: scanId)
+            completedJobId = done.jobId
         } catch {
             self.error = error.localizedDescription
-            status = "Something went wrong — try again."
+            status = "Something went wrong — you can restart the scan."
+            phase = .idle
+            captured = 0
+            uploaded = 0
         }
     }
 }
@@ -88,10 +117,7 @@ struct ScanFlowView: View {
         }
         .onDisappear { camera.stop() }
         .navigationDestination(
-            isPresented: Binding(
-                get: { model.completedJobId != nil },
-                set: { _ in }
-            )
+            isPresented: Binding(get: { model.completedJobId != nil }, set: { _ in })
         ) {
             if let jobId = model.completedJobId { ProcessingView(jobId: jobId) }
         }
@@ -99,48 +125,57 @@ struct ScanFlowView: View {
 
     private var controls: some View {
         VStack {
-            ProgressView(value: model.progress)
-                .tint(Theme.accent).padding(.horizontal).padding(.top, 8)
-            HStack(spacing: 8) {
-                ForEach(model.views) { v in
-                    Image(systemName: v.symbol)
-                        .foregroundStyle(v == model.currentView ? Theme.accent : .white.opacity(0.4))
-                }
-            }
-            .font(.title3).padding(.top, 4)
-
             Spacer()
             if let n = model.countdown {
                 Text("\(n)")
                     .font(.system(size: 96, weight: .heavy, design: .rounded))
                     .foregroundStyle(.white)
                     .transition(.scale.combined(with: .opacity))
+            } else if model.phase != .idle {
+                ProgressRing(progress: model.progress)
+                    .frame(width: 130, height: 130)
             }
             Spacer()
 
             VStack(spacing: 14) {
-                Text(model.currentView.instruction)
+                Text(model.phase == .idle
+                     ? "Tap start, then slowly spin in a full circle keeping your whole body in frame."
+                     : model.status)
                     .font(.headline).foregroundStyle(.white)
                     .multilineTextAlignment(.center)
-                Text(model.status)
-                    .font(.subheadline).foregroundStyle(.white.opacity(0.7))
                 if let e = model.error {
                     Text(e).font(.footnote).foregroundStyle(.red)
                 }
-                Button {
-                    Task { await model.captureCurrent(camera) }
-                } label: {
-                    if model.busy { ProgressView().tint(.white) }
-                    else { Label("Capture \(model.currentView.rawValue)", systemImage: "camera.fill") }
+                if model.phase == .idle {
+                    Button {
+                        Task { await model.run360(camera) }
+                    } label: {
+                        Label("Start 360° scan", systemImage: "arrow.triangle.2.circlepath.camera.fill")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                } else {
+                    HStack(spacing: 8) {
+                        ProgressView().tint(.white)
+                        Text(phaseLabel).foregroundStyle(.white.opacity(0.85))
+                    }
+                    .padding(.vertical, 12)
                 }
-                .buttonStyle(PrimaryButtonStyle(enabled: !model.busy))
-                .disabled(model.busy)
             }
             .padding(20)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
             .padding()
         }
         .animation(.spring(duration: 0.3), value: model.countdown)
+        .animation(.easeInOut, value: model.phase)
+    }
+
+    private var phaseLabel: String {
+        switch model.phase {
+        case .capturing: return "Capturing \(model.captured)/\(model.targetFrames)"
+        case .uploading: return "Uploading \(model.uploaded)/\(model.targetFrames)"
+        case .processing: return "Processing…"
+        default: return ""
+        }
     }
 
     private var permissionPrompt: some View {
@@ -159,5 +194,23 @@ struct ScanFlowView: View {
             .buttonStyle(PrimaryButtonStyle())
         }
         .padding(30)
+    }
+}
+
+/// Circular progress indicator used during capture/upload.
+struct ProgressRing: View {
+    let progress: Double
+    var body: some View {
+        ZStack {
+            Circle().stroke(Color.white.opacity(0.15), lineWidth: 10)
+            Circle()
+                .trim(from: 0, to: max(0.001, progress))
+                .stroke(Theme.brandGradient,
+                        style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .animation(.easeInOut(duration: 0.25), value: progress)
+            Text("\(Int(progress * 100))%")
+                .font(.title2.bold()).foregroundStyle(.white)
+        }
     }
 }

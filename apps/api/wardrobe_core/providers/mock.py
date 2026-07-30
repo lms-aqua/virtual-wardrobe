@@ -63,19 +63,21 @@ def _minimal_glb() -> bytes:
 class DeterministicScanQualityService:
     """Deterministic checks. Placeholders exist for future ML detectors."""
 
+    MIN_FRAMES = 4  # works for the classic 4-view flow and 360° multi-frame
+
     def evaluate(self, images: dict[str, bytes]) -> QualityResult:
-        required = {"front", "left", "back", "right"}
+        non_trivial = [v for v in images.values() if len(v) > 1024]
         reasons = {
-            "all_views_present": required.issubset(images.keys()),
-            "front_non_trivial": len(images.get("front", b"")) > 1024,
-            "left_non_trivial": len(images.get("left", b"")) > 1024,
-            "back_non_trivial": len(images.get("back", b"")) > 1024,
-            "right_non_trivial": len(images.get("right", b"")) > 1024,
-            # Future ML checks (pose, occlusion, full-body detection):
+            "enough_frames": len(non_trivial) >= self.MIN_FRAMES,
+            "all_frames_non_trivial": len(images) > 0 and len(non_trivial) == len(images),
+            # Future ML checks (pose, occlusion, full-body, angular coverage):
             "ml_pose_ok": True,  # placeholder — always true in mock
         }
         passed = all(reasons.values())
-        score = sum(1 for v in reasons.values() if v) / len(reasons)
+        # Score rewards more usable frames (more angular coverage), capped at 1.
+        score = min(1.0, len(non_trivial) / 12.0) if passed else round(
+            sum(1 for v in reasons.values() if v) / len(reasons), 3
+        )
         return QualityResult(score=round(score, 3), passed=passed, reasons=reasons)
 
 

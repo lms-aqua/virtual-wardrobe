@@ -104,7 +104,7 @@ async def create_upload_url(
     if payload.content_type.lower() not in settings.allowed_image_mime_set:
         raise HTTPException(status_code=400, detail="disallowed_content_type")
 
-    key = scan_image_key(user.id, scan.id, payload.view.value)
+    key = scan_image_key(user.id, scan.id, payload.view)
     existing = next((i for i in scan.images if i.view == payload.view), None)
     if existing is None:
         db.add(ScanImage(scan_id=scan.id, view=payload.view, object_key=key,

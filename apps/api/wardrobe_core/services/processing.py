@@ -87,7 +87,7 @@ async def process_scan(scan_id: uuid.UUID) -> None:
             if not ok:
                 await fail(f"invalid_image:{detail}")
                 return
-            images[img.view.value] = data
+            images[img.view] = data
 
         # 2) Quality gate.
         quality = get_quality_service().evaluate(images)

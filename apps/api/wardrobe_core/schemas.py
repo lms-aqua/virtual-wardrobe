@@ -71,7 +71,7 @@ class ScanCreate(BaseModel):
 
 
 class ScanImageOut(ORMModel):
-    view: enums.ScanView
+    view: str
     uploaded: bool
 
 
@@ -86,12 +86,13 @@ class ScanOut(ORMModel):
 
 
 class UploadUrlRequest(BaseModel):
-    view: enums.ScanView
+    # "front"/"left"/"back"/"right" or a frame id like "frame_0007".
+    view: str = Field(pattern=r"^[a-z0-9_]{1,32}$")
     content_type: str
 
 
 class UploadUrlResponse(BaseModel):
-    view: enums.ScanView
+    view: str
     url: str
     fields: dict
     max_bytes: int
