@@ -110,9 +110,14 @@ linked Apple ID / AppDB certificate, then install. Trust the profile under
 2. AltStore → **My Apps → +** → pick the `.ipa` → it signs with your Apple ID
    and installs. Free Apple IDs expire the app after 7 days (AltStore can refresh
    it automatically while on the same network).
-3. Optional source feed: host [`altstore-source.json`](altstore-source.json) at a
-   public URL and add it in AltStore → **Browse → Sources → +**. (Requires a
-   public `downloadURL` — see the caveat above.)
+3. **Recommended — add the source feed for one-tap updates.** In AltStore →
+   **Browse → Sources → +**, add:
+   ```
+   https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/altstore-source.json
+   ```
+   Each CI build bumps the version and refreshes this manifest, so AltStore
+   shows "Update" automatically. (Repo is public, so the feed + `.ipa` are
+   fetchable without auth.)
 
 ### Sideloadly
 Open Sideloadly on a PC/Mac, plug in the iPhone, drag the `.ipa` in, enter your

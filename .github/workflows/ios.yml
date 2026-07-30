@@ -1,11 +1,9 @@
 name: iOS build (unsigned IPA)
 
-# Compiles the SwiftUI app on GitHub's macOS runners and uploads an UNSIGNED
-# .ipa artifact. Download it and sign/install with AppDB (or any sideload tool),
-# which handles signing without a paid Apple Developer account.
-#
-# Run it from the Actions tab (workflow_dispatch), or it runs on pushes that
-# touch the iOS app.
+# Compiles the SwiftUI app on GitHub's macOS runners, publishes an UNSIGNED
+# .ipa to the moving "ios-latest" release, and regenerates the AltStore source
+# manifest with a bumped version each build so AltStore shows an update.
+# Download/sign/install with AppDB, AltStore, Sideloadly, ESign, or TrollStore.
 
 on:
   workflow_dispatch:
@@ -15,13 +13,11 @@ on:
       - ".github/workflows/ios.yml"
 
 permissions:
-  contents: write        # needed to publish the .ipa as a Release asset
+  contents: write
 
 jobs:
   build:
-    # macos-15 ships Xcode 16, which can read the project format (objectVersion
-    # 77) that current XcodeGen emits. macos-14 (Xcode 15) cannot.
-    runs-on: macos-15
+    runs-on: macos-15      # Xcode 16 (reads XcodeGen project format 77)
     defaults:
       run:
         working-directory: apps/ios
@@ -33,7 +29,6 @@ jobs:
           set -eo pipefail
           LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
           DEV="${LATEST:-/Applications/Xcode.app}/Contents/Developer"
-          echo "Selecting $DEV"
           sudo xcode-select -s "$DEV"
           xcodebuild -version
 
@@ -42,6 +37,15 @@ jobs:
 
       - name: Generate Xcode project
         run: xcodegen generate
+
+      - name: Set build version (monotonic, so AltStore sees updates)
+        run: |
+          set -eo pipefail
+          VERSION="0.1.${{ github.run_number }}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" Info-generated.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" Info-generated.plist
+          echo "Built version $VERSION"
 
       - name: Build (device SDK, no signing)
         run: |
@@ -52,9 +56,7 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             build
 
       - name: Package unsigned .ipa
@@ -65,7 +67,51 @@ jobs:
           rm -rf Payload && mkdir Payload
           cp -R "$APP_DIR" Payload/
           zip -qry VirtualWardrobe-unsigned.ipa Payload
-          ls -lh VirtualWardrobe-unsigned.ipa
+          echo "IPA_SIZE=$(stat -f%z VirtualWardrobe-unsigned.ipa)" >> "$GITHUB_ENV"
+
+      - name: Generate AltStore source manifest
+        run: |
+          set -eo pipefail
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          BASE="https://github.com/${{ github.repository }}/releases/download/ios-latest"
+          cat > altstore-source.json <<EOF
+          {
+            "name": "Virtual Wardrobe",
+            "identifier": "com.lostmedia.virtualwardrobe.source",
+            "sourceURL": "$BASE/altstore-source.json",
+            "website": "https://github.com/${{ github.repository }}",
+            "tintColor": "6D5EFC",
+            "apps": [
+              {
+                "name": "Virtual Wardrobe",
+                "bundleIdentifier": "com.lostmedia.virtualwardrobe",
+                "developerName": "Lost Media Studios",
+                "subtitle": "Private virtual try-on wardrobe",
+                "localizedDescription": "Build a personalized 3D avatar from a guided 360 body scan and try on digital clothing. Privacy-first: adults-only consent, private storage, no face recognition, one-tap delete.",
+                "iconURL": "$BASE/icon.png",
+                "tintColor": "6D5EFC",
+                "category": "lifestyle",
+                "version": "$VERSION",
+                "versionDate": "$DATE",
+                "versionDescription": "360 multi-frame body capture; connects to the live backend.",
+                "downloadURL": "$BASE/VirtualWardrobe-unsigned.ipa",
+                "size": ${IPA_SIZE},
+                "versions": [
+                  {
+                    "version": "$VERSION",
+                    "date": "$DATE",
+                    "localizedDescription": "360 multi-frame body capture; connects to the live backend.",
+                    "downloadURL": "$BASE/VirtualWardrobe-unsigned.ipa",
+                    "size": ${IPA_SIZE},
+                    "minOSVersion": "17.0"
+                  }
+                ]
+              }
+            ],
+            "news": []
+          }
+          EOF
+          echo "--- manifest ---"; cat altstore-source.json
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
@@ -74,8 +120,6 @@ jobs:
           path: apps/ios/VirtualWardrobe-unsigned.ipa
           if-no-files-found: error
 
-      # Publish the .ipa to a moving "ios-latest" release so there is a stable
-      # download URL for AppDB / AltStore / Sideloadly / ESign / TrollStore.
       - name: Publish to "ios-latest" release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -83,7 +127,7 @@ jobs:
           set -eo pipefail
           gh release delete ios-latest --yes --cleanup-tag 2>/dev/null || true
           gh release create ios-latest \
-            VirtualWardrobe-unsigned.ipa \
-            --title "iOS unsigned build (latest)" \
-            --notes "Unsigned .ipa for sideloading. Sign + install with AppDB, AltStore, Sideloadly, ESign, or TrollStore. See apps/ios/README.md. Built from ${{ github.sha }}."
-          echo "Download: https://github.com/${{ github.repository }}/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa"
+            VirtualWardrobe-unsigned.ipa altstore-source.json icon.png \
+            --title "iOS $VERSION (unsigned)" \
+            --notes "Version $VERSION. Unsigned .ipa for sideloading (AppDB / AltStore / Sideloadly / ESign / TrollStore). AltStore source: $GITHUB_SERVER_URL/${{ github.repository }}/releases/download/ios-latest/altstore-source.json"
+          echo "AltStore source URL: $GITHUB_SERVER_URL/${{ github.repository }}/releases/download/ios-latest/altstore-source.json"
