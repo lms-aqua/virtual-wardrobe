@@ -1,0 +1,30 @@
+{
+  "name": "Virtual Wardrobe",
+  "identifier": "com.lostmedia.virtualwardrobe.source",
+  "sourceURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/altstore-source.json",
+  "website": "https://github.com/lms-aqua/virtual-wardrobe",
+  "tintColor": "6D5EFC",
+  "apps": [
+    {
+      "name": "Virtual Wardrobe",
+      "bundleIdentifier": "com.lostmedia.virtualwardrobe",
+      "developerName": "Lost Media Studios",
+      "subtitle": "Private virtual try-on wardrobe",
+      "localizedDescription": "Build a personalized 3D avatar from a guided body scan and try on digital clothing. Privacy-first: adults-only consent, private storage, no face recognition, one-tap delete. Avatar generation is a clearly-labeled mock in this build.",
+      "iconURL": "https://raw.githubusercontent.com/lms-aqua/virtual-wardrobe/main/apps/ios/icon.png",
+      "tintColor": "6D5EFC",
+      "category": "lifestyle",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "date": "2026-07-30T00:00:00-04:00",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "size": 0,
+          "minOSVersion": "17.0",
+          "localizedDescription": "Initial sideload build: magic-link auth, guided body capture, avatar, wardrobe, privacy controls."
+        }
+      ]
+    }
+  ],
+  "news": []
+}

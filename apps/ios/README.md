@@ -77,8 +77,55 @@ macOS-only. But GitHub's **cloud macOS runners** can compile it for you, and
 Notes:
 - macOS runner minutes are **free on public repos**; private repos have a
   limited monthly free allowance (macOS counts at a higher rate).
-- The build is unsigned on purpose — AppDB (or AltStore/Sideloadly) does the
-  signing. Don't add signing secrets unless you switch to TestFlight later.
+- The build is unsigned on purpose — the installer does the signing. Don't add
+  signing secrets unless you switch to TestFlight later.
+
+## Where to download the build
+
+Every successful build publishes the same unsigned `.ipa` two ways:
+
+- **Actions artifact** — run page → *Artifacts* → `VirtualWardrobe-unsigned-ipa`
+  (a `.zip`; unzip to get the `.ipa`).
+- **Release (stable URL)** — the `ios-latest` release always holds the newest
+  build: `https://github.com/lms-aqua/virtual-wardrobe/releases/tag/ios-latest`
+  → asset `VirtualWardrobe-unsigned.ipa`.
+
+> Private-repo caveat: those download URLs require you to be signed in to the
+> `lms-aqua` account. Tools that fetch a URL anonymously (AltStore source feeds,
+> "install from URL") need a **public** release or another public host. Make the
+> repo/release public, or upload the `.ipa` somewhere public, if you want the
+> AltStore-source flow below to work without auth.
+
+## Installing the `.ipa` (pick any sideloader)
+
+The unsigned `.ipa` works with all of these — they each sign it for your device.
+
+### AppDB
+Upload the `.ipa` in AppDB (My App Store → install), let it sign with your
+linked Apple ID / AppDB certificate, then install. Trust the profile under
+**Settings → General → VPN & Device Management** if prompted.
+
+### AltStore
+1. Install AltServer on a PC/Mac and AltStore on the iPhone (one-time).
+2. AltStore → **My Apps → +** → pick the `.ipa` → it signs with your Apple ID
+   and installs. Free Apple IDs expire the app after 7 days (AltStore can refresh
+   it automatically while on the same network).
+3. Optional source feed: host [`altstore-source.json`](altstore-source.json) at a
+   public URL and add it in AltStore → **Browse → Sources → +**. (Requires a
+   public `downloadURL` — see the caveat above.)
+
+### Sideloadly
+Open Sideloadly on a PC/Mac, plug in the iPhone, drag the `.ipa` in, enter your
+Apple ID, click **Start**. Same 7-day limit on free Apple IDs.
+
+### ESign / Feather (on-device)
+Import the `.ipa` into ESign (or Feather), then sign with a certificate you've
+added and install — no computer needed if you already have a signing cert.
+
+### TrollStore (permanent, no signing)
+On TrollStore-supported iOS versions, TrollStore installs the **unsigned** `.ipa`
+directly and permanently — no Apple ID, no 7-day expiry. Best option if your
+device/iOS is TrollStore-compatible.
 
 ## Notes / roadmap
 
