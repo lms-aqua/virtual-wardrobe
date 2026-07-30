@@ -1,0 +1,47 @@
+# XcodeGen spec. CI (or a Mac) runs `xcodegen generate` to produce the
+# .xcodeproj from these Swift sources, then `xcodebuild` builds it. This is what
+# lets the app compile on a cloud macOS runner without a committed .xcodeproj.
+name: VirtualWardrobe
+
+options:
+  bundleIdPrefix: com.lostmedia
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+targets:
+  VirtualWardrobe:
+    type: application
+    platform: iOS
+    sources:
+      - path: VirtualWardrobe
+        excludes:
+          - "Info.plist"          # generated below instead
+    info:
+      # XcodeGen writes this, merging Apple's standard keys (CFBundleIdentifier,
+      # executable, package type) with our custom privacy keys.
+      path: Info-generated.plist
+      properties:
+        CFBundleDisplayName: Virtual Wardrobe
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSCameraUsageDescription: >-
+          Virtual Wardrobe uses the camera only for the body scan you start, to
+          build your personalized 3D avatar. Photos upload to private storage
+          and are deleted after your avatar is generated.
+        # DEV ONLY: allow http://localhost for the Simulator against a local API.
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            localhost:
+              NSExceptionAllowsInsecureHTTPLoads: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lostmedia.virtualwardrobe
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"     # iPhone + iPad
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: NO

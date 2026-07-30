@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDisplayName</key>
+    <string>Virtual Wardrobe</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+
+    <!-- Explains, in plain language, why the camera is used. Shown at the
+         permission prompt. Capture only happens during a scan the user starts. -->
+    <key>NSCameraUsageDescription</key>
+    <string>Virtual Wardrobe uses the camera only for the body scan you start, to build your personalized 3D avatar. Photos upload to private storage and are deleted after your avatar is generated.</string>
+
+    <key>UILaunchScreen</key>
+    <dict/>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+
+    <!-- DEV ONLY: allow http://localhost so the Simulator can reach a local
+         backend. Remove this block for production; the real domain uses HTTPS. -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>localhost</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
+</dict>
+</plist>

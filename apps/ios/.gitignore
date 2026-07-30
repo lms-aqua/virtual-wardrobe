@@ -1,0 +1,8 @@
+# XcodeGen output + build artifacts
+*.xcodeproj/
+Info-generated.plist
+build/
+DerivedData/
+*.ipa
+Payload/
+.DS_Store

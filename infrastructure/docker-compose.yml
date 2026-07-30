@@ -1,0 +1,107 @@
+# Local development stack. Everything is private-by-default:
+#   - MinIO buckets are created private (no anonymous policy is ever set).
+#   - No service except the reverse proxy / web should be publicly exposed in prod.
+# On the Ubuntu box this same file runs behind Caddy (TLS termination).
+name: virtual-wardrobe
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wardrobe}
+      POSTGRES_USER: ${POSTGRES_USER:-wardrobe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-postgres}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"          # dev convenience; remove/firewall in prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wardrobe}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-change-me-minio-access}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-change-me-minio-secret}
+    volumes:
+      - ./data/minio:/data
+    ports:
+      - "9000:9000"          # S3 API
+      - "9001:9001"          # console (dev only)
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: create the private buckets. No public policy is ever applied.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-change-me-minio-access} ${S3_SECRET_KEY:-change-me-minio-secret} &&
+      mc mb --ignore-existing local/${S3_BUCKET_SCANS:-vw-scans-private} &&
+      mc mb --ignore-existing local/${S3_BUCKET_AVATARS:-vw-avatars-private} &&
+      mc mb --ignore-existing local/${S3_BUCKET_GARMENTS:-vw-garments-private} &&
+      echo 'Private buckets ready (no anonymous access set).'
+      "
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"          # SMTP
+      - "8025:8025"          # web UI
+
+  api:
+    build:
+      context: ../apps/api
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: uvicorn wardrobe_core.main:app --host 0.0.0.0 --port 8000
+
+  worker:
+    build:
+      context: ../apps/api
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    command: dramatiq wardrobe_core.worker:broker --processes 2 --threads 4

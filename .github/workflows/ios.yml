@@ -1,0 +1,64 @@
+name: iOS build (unsigned IPA)
+
+# Compiles the SwiftUI app on GitHub's macOS runners and uploads an UNSIGNED
+# .ipa artifact. Download it and sign/install with AppDB (or any sideload tool),
+# which handles signing without a paid Apple Developer account.
+#
+# Run it from the Actions tab (workflow_dispatch), or it runs on pushes that
+# touch the iOS app.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "apps/ios/**"
+      - ".github/workflows/ios.yml"
+
+jobs:
+  build:
+    runs-on: macos-14      # Apple Silicon macOS runner with Xcode preinstalled
+    defaults:
+      run:
+        working-directory: apps/ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build (device SDK, no signing)
+        run: |
+          set -eo pipefail
+          xcodebuild \
+            -project VirtualWardrobe.xcodeproj \
+            -scheme VirtualWardrobe \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package unsigned .ipa
+        run: |
+          set -eo pipefail
+          APP_DIR="build/Build/Products/Release-iphoneos/VirtualWardrobe.app"
+          test -d "$APP_DIR" || { echo "App not found at $APP_DIR"; exit 1; }
+          rm -rf Payload && mkdir Payload
+          cp -R "$APP_DIR" Payload/
+          zip -qry VirtualWardrobe-unsigned.ipa Payload
+          ls -lh VirtualWardrobe-unsigned.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VirtualWardrobe-unsigned-ipa
+          path: apps/ios/VirtualWardrobe-unsigned.ipa
+          if-no-files-found: error

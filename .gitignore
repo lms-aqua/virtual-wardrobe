@@ -1,0 +1,33 @@
+# deps
+node_modules/
+.pnpm-store/
+.venv/
+__pycache__/
+*.egg-info/
+
+# builds
+.next/
+dist/
+build/
+out/
+.turbo/
+
+# env & secrets — NEVER commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# data / uploads (local minio, db volumes)
+infrastructure/data/
+*.sqlite3
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
+coverage/
+.pytest_cache/
