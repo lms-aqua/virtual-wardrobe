@@ -8,6 +8,9 @@ import UIKit
 final class CameraController: NSObject, ObservableObject {
     @Published var authorized = false
     @Published var running = false
+    // Default to the FRONT camera (selfie) so the user can see themselves;
+    // switchable to the back camera for other framing / a helper holding it.
+    @Published var position: AVCaptureDevice.Position = .front
 
     let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
@@ -24,15 +27,36 @@ final class CameraController: NSObject, ObservableObject {
     }
 
     private func configure() {
-        guard session.inputs.isEmpty else { return }
         session.beginConfiguration()
         session.sessionPreset = .photo
-        if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-           let input = try? AVCaptureDeviceInput(device: device),
+        setVideoInput(for: position)
+        if session.outputs.isEmpty, session.canAddOutput(photoOutput) {
+            session.addOutput(photoOutput)
+        }
+        session.commitConfiguration()
+    }
+
+    /// Swap the active camera to the given position, removing any prior input.
+    private func setVideoInput(for position: AVCaptureDevice.Position) {
+        for input in session.inputs {
+            if let deviceInput = input as? AVCaptureDeviceInput,
+               deviceInput.device.hasMediaType(.video) {
+                session.removeInput(deviceInput)
+            }
+        }
+        let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position)
+            ?? AVCaptureDevice.default(for: .video)
+        if let device, let input = try? AVCaptureDeviceInput(device: device),
            session.canAddInput(input) {
             session.addInput(input)
         }
-        if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
+    }
+
+    /// Toggle between front and back cameras.
+    func flip() {
+        position = (position == .front) ? .back : .front
+        session.beginConfiguration()
+        setVideoInput(for: position)
         session.commitConfiguration()
     }
 

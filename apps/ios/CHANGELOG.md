@@ -4,6 +4,10 @@ The AltStore-visible changelog lives in `altstore-source.json`
 (`apps[0].versions[].localizedDescription`). Bump the `version` there to release;
 CI builds the `.ipa` at that exact version so AltStore detects the update.
 
+## 0.1.2
+- **Front camera by default** (selfie) so you can see yourself during the scan.
+- **Front/Back toggle** — tap to switch cameras for other framing.
+
 ## 0.1.1
 - **360° multi-frame body capture** — replaces the old 4-photo flow. Turn slowly
   and the app grabs ~24 frames with a live progress ring.

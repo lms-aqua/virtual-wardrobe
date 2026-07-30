@@ -14,12 +14,20 @@
       "iconURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/icon.png",
       "tintColor": "6D5EFC",
       "category": "lifestyle",
-      "version": "0.1.1",
-      "versionDate": "2026-07-30T21:00:00-04:00",
-      "versionDescription": "360° multi-frame body capture, live backend by default, and a new app icon.",
+      "version": "0.1.2",
+      "versionDate": "2026-07-30T21:30:00-04:00",
+      "versionDescription": "Camera defaults to the front (selfie) camera with a tap to switch to the back.",
       "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
       "size": 411466,
       "versions": [
+        {
+          "version": "0.1.2",
+          "date": "2026-07-30T21:30:00-04:00",
+          "localizedDescription": "What's new in 0.1.2:\n• Camera now defaults to the front (selfie) camera so you can see yourself\n• Tap the Front/Back button to switch cameras for other framing",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "size": 411466,
+          "minOSVersion": "17.0"
+        },
         {
           "version": "0.1.1",
           "date": "2026-07-30T21:00:00-04:00",

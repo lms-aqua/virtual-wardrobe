@@ -104,6 +104,7 @@ struct ScanFlowView: View {
                 CameraPreview(session: camera.session).ignoresSafeArea()
                 SilhouetteOverlay()
                 controls
+                flipButton
             } else {
                 permissionPrompt
             }
@@ -175,6 +176,27 @@ struct ScanFlowView: View {
         case .uploading: return "Uploading \(model.uploaded)/\(model.targetFrames)"
         case .processing: return "Processing…"
         default: return ""
+        }
+    }
+
+    /// Front/back toggle, shown top-right while idle (not mid-capture).
+    private var flipButton: some View {
+        VStack {
+            HStack {
+                Spacer()
+                if model.phase == .idle {
+                    Button { camera.flip() } label: {
+                        Label(camera.position == .front ? "Front" : "Back",
+                              systemImage: "arrow.triangle.2.circlepath.camera")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14).padding(.vertical, 9)
+                            .background(.ultraThinMaterial, in: Capsule())
+                    }
+                    .padding(.trailing, 18).padding(.top, 10)
+                }
+            }
+            Spacer()
         }
     }
 
