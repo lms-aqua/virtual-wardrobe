@@ -44,7 +44,7 @@ struct GarmentDetailView: View {
             } else {
                 GarmentAppearance.of(garment).color.opacity(0.20)
                     .clipShape(RoundedRectangle(cornerRadius: DS.Radius.container, style: .continuous))
-                Image(systemName: "tshirt.fill").font(.system(size: 72))
+                Image(systemName: "tshirt.fill").font(.largeTitle)
                     .foregroundStyle(GarmentAppearance.of(garment).color)
             }
         }

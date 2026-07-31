@@ -134,7 +134,7 @@ struct ARMeasureView: View {
 
     private var unsupported: some View {
         VStack(spacing: 14) {
-            Image(systemName: "arkit").font(.system(size: 44)).foregroundStyle(Theme.accent)
+            Image(systemName: "arkit").font(.largeTitle).foregroundStyle(Theme.accent)
             Text("AR body measuring isn't supported on this device")
                 .font(.title3.bold()).foregroundStyle(DS.Color.primaryText).multilineTextAlignment(.center)
             Text("It needs an A12 chip or newer. You can still edit measurements by hand.")

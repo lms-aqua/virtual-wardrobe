@@ -20,7 +20,7 @@ struct OutfitCompareView: View {
                 ProgressView().tint(DS.Color.accent)
             } else if outfits.count < 2 {
                 VStack(spacing: 10) {
-                    Image(systemName: "square.on.square").font(.system(size: 40)).foregroundStyle(Theme.accent)
+                    Image(systemName: "square.on.square").font(.largeTitle).foregroundStyle(Theme.accent)
                     Text("Save at least two outfits to compare them.")
                         .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)
                 }.padding()

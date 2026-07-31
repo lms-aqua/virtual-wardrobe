@@ -183,7 +183,7 @@ struct OutfitBuilderView: View {
 
     private var emptyState: some View {
         VStack(spacing: 12) {
-            Image(systemName: "figure.stand").font(.system(size: 46)).foregroundStyle(Theme.accent)
+            Image(systemName: "figure.stand").font(.largeTitle).foregroundStyle(Theme.accent)
             Text("No avatar yet").font(.headline).foregroundStyle(DS.Color.primaryText)
             Text("Run a body scan first, then come back to try on clothes in 3D.")
                 .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)

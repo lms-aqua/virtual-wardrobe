@@ -13,7 +13,7 @@ struct ConsentView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     Image(systemName: "hand.raised.fill")
-                        .font(.system(size: 40)).foregroundStyle(Theme.accent)
+                        .font(.largeTitle).foregroundStyle(Theme.accent)
                     Text("Before you scan")
                         .font(.largeTitle.bold()).foregroundStyle(DS.Color.primaryText)
 

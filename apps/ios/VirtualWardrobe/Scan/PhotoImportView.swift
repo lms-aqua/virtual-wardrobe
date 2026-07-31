@@ -36,7 +36,7 @@ struct PhotoImportView: View {
     private var pickUI: some View {
         VStack(spacing: 18) {
             Image(systemName: "photo.on.rectangle.angled")
-                .font(.system(size: 48)).foregroundStyle(Theme.accent)
+                .font(.largeTitle).foregroundStyle(Theme.accent)
             Text("Pick 6–12 full-body photos from different angles (front, sides, back).")
                 .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)
                 .padding(.horizontal)
@@ -64,7 +64,7 @@ struct PhotoImportView: View {
 
     private var doneUI: some View {
         VStack(spacing: 18) {
-            Image(systemName: "checkmark.seal.fill").font(.system(size: 44)).foregroundStyle(Theme.accent)
+            Image(systemName: "checkmark.seal.fill").font(.largeTitle).foregroundStyle(Theme.accent)
             Text("Avatar ready!").font(.title.bold()).foregroundStyle(DS.Color.primaryText)
             if let avatar { AvatarCard(avatar: avatar) }
             Button("Done") { onFinish() }.buttonStyle(PrimaryButtonStyle())
@@ -74,7 +74,7 @@ struct PhotoImportView: View {
 
     private var failedUI: some View {
         VStack(spacing: 14) {
-            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 40)).foregroundStyle(.orange)
+            Image(systemName: "exclamationmark.triangle.fill").font(.largeTitle).foregroundStyle(.orange)
             Text("Couldn't build the avatar").font(.title3.bold()).foregroundStyle(DS.Color.primaryText)
             Text("Make sure you picked at least 4 clear, full-body photos, then try again.")
                 .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)

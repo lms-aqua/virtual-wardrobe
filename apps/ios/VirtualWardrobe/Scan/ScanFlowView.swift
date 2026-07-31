@@ -224,7 +224,7 @@ struct ScanFlowView: View {
     private var permissionPrompt: some View {
         VStack(spacing: 16) {
             Image(systemName: "camera.metering.unknown")
-                .font(.system(size: 44)).foregroundStyle(Theme.accent)
+                .font(.largeTitle).foregroundStyle(Theme.accent)
             Text("Camera access needed")
                 .font(.title2.bold()).foregroundStyle(DS.Color.primaryText)
             Text("We use the camera only for the scan you start. Enable it in Settings.")

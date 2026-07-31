@@ -119,7 +119,7 @@ struct HomeView: View {
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "figure.stand")
-                .font(.system(size: 48)).foregroundStyle(Theme.accent)
+                .font(.largeTitle).foregroundStyle(Theme.accent)
             Text("No avatar yet").font(.headline).foregroundStyle(DS.Color.primaryText)
             Text("Do a quick guided body scan to build your personalized 3D avatar.")
                 .multilineTextAlignment(.center)
@@ -214,6 +214,6 @@ struct RemoteThumb: View {
     }
     private var placeholder: some View {
         Image(systemName: "figure.stand")
-            .font(.system(size: 60)).foregroundStyle(DS.Color.tertiaryText)
+            .font(.largeTitle).foregroundStyle(DS.Color.tertiaryText)
     }
 }

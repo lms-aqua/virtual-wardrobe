@@ -132,7 +132,7 @@ struct MirrorView: View {
 
     private var unsupported: some View {
         VStack(spacing: 14) {
-            Image(systemName: "arkit").font(.system(size: 44)).foregroundStyle(Theme.accent)
+            Image(systemName: "arkit").font(.largeTitle).foregroundStyle(Theme.accent)
             Text("AR mirror needs a device with an A12 chip or newer")
                 .font(.title3.bold()).foregroundStyle(DS.Color.primaryText).multilineTextAlignment(.center)
             Button("Close") { onFinish() }.buttonStyle(PrimaryButtonStyle())
