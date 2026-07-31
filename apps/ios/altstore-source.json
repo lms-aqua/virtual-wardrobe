@@ -18,14 +18,14 @@
       "versionDate": "2026-07-31T05:00:00-04:00",
       "versionDescription": "A rebuilt, Apple-quality interface: new design system, Liquid Glass controls, a redesigned image-first Wardrobe, and full Dynamic Type / VoiceOver / Reduce Transparency support.",
       "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v2.0.0/VirtualWardrobe-unsigned.ipa",
-      "size": 952893,
+      "size": 952894,
       "versions": [
         {
           "version": "2.0.0",
           "date": "2026-07-31T05:00:00-04:00",
           "localizedDescription": "✨ Virtual Wardrobe 2.0 — redesigned\n\n🪟 LIQUID GLASS\nFloating controls and filters now use Apple's Liquid Glass on iOS 26, with a designed material fallback on iOS 17–18. Nothing is glass just for the sake of it — your garments stay the focus.\n\n👕 A NEW WARDROBE\nImage-first grid, native search, one-tap category filters, and long-press actions. Your clothes are the interface now.\n\n♿ BUILT FOR EVERYONE\nFull Dynamic Type (the grid becomes a single column at accessibility sizes), richer VoiceOver descriptions, Reduce Transparency and Reduce Motion support, and status that never relies on colour alone.\n\n🎛️ CONSISTENT BY DESIGN\nA real design system underpins spacing, type, shape, and motion — so every screen from here on matches.\n\nThis release is interface-focused; the avatar is still a stylized, measurement-based preview.",
           "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v2.0.0/VirtualWardrobe-unsigned.ipa",
-          "size": 952893,
+          "size": 952894,
           "minOSVersion": "17.0"
         },
         {

@@ -120,12 +120,30 @@ jobs:
                 f"{len(app.get('versions', [])) - 1} historical entries untouched")
           PY
 
+      - name: Decide whether this build may publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPUBLISH: ${{ github.event.inputs.republish }}
+        run: |
+          set -eo pipefail
+          # A permanent release is immutable once it exists: rebuilding without
+          # bumping the version used to overwrite it in place, which is how
+          # v1.4.0 ended up holding a later build's .ipa.
+          if gh release view "v$VERSION" >/dev/null 2>&1 && [ "$REPUBLISH" != "true" ]; then
+            echo "PUBLISH=false" >> "$GITHUB_ENV"
+            echo "::warning title=Release not published::v$VERSION is already published and was left untouched. Bump the version in apps/ios/altstore-source.json, or re-run this workflow with republish=true to overwrite it deliberately."
+          else
+            echo "PUBLISH=true" >> "$GITHUB_ENV"
+          fi
+
       - name: Commit the corrected manifest back to main
         # The main README points AltStore at the raw main copy, so that file —
-        # not just the release asset — has to carry the real size. [skip ci]
-        # prevents this push from retriggering the workflow (the manifest lives
-        # under the apps/ios/** path filter).
-        if: github.ref == 'refs/heads/main'
+        # not just the release asset — has to carry the real size. Skipped when
+        # this build is not publishing: recording the size of a binary that
+        # never reached the release would make the manifest describe an artifact
+        # nobody can download. The skip-ci marker keeps this push from
+        # retriggering the workflow (the manifest sits under apps/ios/**).
+        if: env.PUBLISH == 'true' && github.ref == 'refs/heads/main'
         run: |
           set -eo pipefail
           if git diff --quiet -- altstore-source.json; then
@@ -146,24 +164,16 @@ jobs:
           if-no-files-found: error
 
       - name: Publish releases (permanent per-version + moving latest)
+        # Gated by the decision step above. The build artifact is still attached
+        # to the run either way, so a rebuild is never wasted — it just cannot
+        # mutate published history.
+        if: env.PUBLISH == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          REPUBLISH: ${{ github.event.inputs.republish }}
         run: |
           set -eo pipefail
           NOTES="Virtual Wardrobe $VERSION — unsigned .ipa for sideloading (AppDB / AltStore / Sideloadly / ESign / TrollStore). See the README for install steps."
           ASSETS="VirtualWardrobe-unsigned.ipa altstore-source.json icon.png"
-
-          # Publish gate. A permanent release is immutable once it exists:
-          # rebuilding without bumping the version previously overwrote it in
-          # place, which is how v1.4.0 ended up holding a later build's .ipa.
-          # The artifact is still uploaded to the run, so a rebuild is never
-          # wasted — it just does not mutate published history.
-          if gh release view "v$VERSION" >/dev/null 2>&1 && [ "$REPUBLISH" != "true" ]; then
-            echo "::warning title=Release not published::v$VERSION is already published and was left untouched. Bump the version in apps/ios/altstore-source.json, or re-run this workflow with republish=true to overwrite it deliberately."
-            echo "Build artifact is attached to this run; no release was modified."
-            exit 0
-          fi
 
           # 1) Permanent, never-deleted release for THIS version.
           if gh release view "v$VERSION" >/dev/null 2>&1; then
