@@ -34,13 +34,16 @@ struct WardrobeItemCell: View {
                 .fill(DS.Color.imageBackdrop)
 
             if let s = garment.thumbUrl, let url = URL(string: s) {
-                AsyncImage(url: url) { phase in
+                // Cached: revisiting a cell paints from memory instead of
+                // refetching and re-decoding, and previously-seen garments
+                // still render with no connection.
+                CachedImage(url: url) { phase in
                     switch phase {
                     case .success(let img):
                         img.resizable().scaledToFit().padding(DS.Space.m)
                     case .failure:
                         symbolPlaceholder
-                    default:
+                    case .loading:
                         // Static fill, not a spinner — a grid of independently
                         // animating placeholders reads as noise.
                         DS.Color.skeleton
