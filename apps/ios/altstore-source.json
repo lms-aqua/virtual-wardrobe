@@ -18,14 +18,14 @@
       "versionDate": "2026-07-31T21:25:00-04:00",
       "versionDescription": "The scan now verifies a person is in frame instead of accepting anything; 54-garment catalog; working size recommendations.",
       "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v3.1.0/VirtualWardrobe-unsigned.ipa",
-      "size": 984573,
+      "size": 988114,
       "versions": [
         {
           "version": "3.1.0",
           "date": "2026-07-31T21:25:00-04:00",
           "localizedDescription": "🧍 Virtual Wardrobe 3.1 — an honest scanner, and a real wardrobe\n\n⚠️ THE SCAN NOW CHECKS THERE'S A PERSON IN FRAME\nPreviously the scan never looked at your photos at all — you could point the camera at a blank wall and get a full set of body measurements. It now runs on-device body detection and refuses the scan if it can't see you.\n\nTo be straight about what this app does: your measurements are proportional estimates from the height you enter. The scan builds your 3D avatar, but it does not measure you. For an accurate fit, enter your real measurements on the Measurements screen — the avatar updates to match. Real photo-based body reconstruction is still ahead.\n\n👕 54 REAL GARMENTS\nThe catalog was 8 items called \"Sample\". It's now 54 garments across six brands — tees, shirts, knits, jeans, chinos, skirts, dresses, coats, jackets and shoes, with real materials and prices.\n\n📏 SIZE RECOMMENDATIONS ACTUALLY WORK\nEvery size used to carry identical measurements, so the recommended size was meaningless. Sizes are now properly graded XS-XXL.",
           "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v3.1.0/VirtualWardrobe-unsigned.ipa",
-          "size": 984573,
+          "size": 988114,
           "minOSVersion": "17.0"
         },
         {
