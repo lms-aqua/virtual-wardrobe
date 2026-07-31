@@ -112,7 +112,11 @@ struct PhotoImportView: View {
                     avatar = try await session.api.avatars().first
                     progress = 1; phase = .done; return
                 } else if job.status == "failed" { phase = .failed; return }
-                try? await Task.sleep(nanoseconds: 800_000_000)
+                // BUG-012: `try?` here discarded CancellationError, so leaving
+                // the screen ran the remaining iterations back-to-back with no
+                // delay instead of stopping.
+                if Task.isCancelled { return }
+                do { try await Task.sleep(nanoseconds: 800_000_000) } catch { return }
             }
             phase = .failed
         } catch {

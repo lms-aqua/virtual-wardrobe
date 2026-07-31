@@ -46,8 +46,18 @@ struct ScanCompleteResponse: Codable {
     }
 }
 
-struct JobDTO: Codable { let id: String; let status: String; let errorCode: String?
-    enum CodingKeys: String, CodingKey { case id; case status; case errorCode = "error_code" } }
+struct JobDTO: Codable {
+    let id: String
+    let status: String
+    let errorCode: String?
+    /// 0-100, set by the pipeline at each stage. Optional so an older backend
+    /// that omits it still decodes.
+    let progress: Int?
+    enum CodingKeys: String, CodingKey {
+        case id; case status; case progress
+        case errorCode = "error_code"
+    }
+}
 
 struct MeasurementDTO: Codable {
     let heightCm: Double?

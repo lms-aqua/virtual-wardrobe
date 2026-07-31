@@ -8,6 +8,7 @@ struct ProcessingView: View {
     @State private var status = "processing"
     @State private var avatar: AvatarDTO?
     @State private var errorCode: String?
+    @State private var progress: Int?
     @State private var polling = true
 
     var body: some View {
@@ -34,17 +35,43 @@ struct ProcessingView: View {
 
     private var inProgress: some View {
         VStack(spacing: 16) {
-            ProgressView().tint(DS.Color.accent).scaleEffect(1.4)
+            // The backend reports real progress at each pipeline stage and the
+            // client was throwing it away, showing an indeterminate spinner
+            // instead. Determinate only when a real value exists — never a
+            // fabricated percentage.
+            if let progress, progress > 0 {
+                ProgressView(value: Double(min(progress, 100)), total: 100)
+                    .progressViewStyle(.linear)
+                    .tint(DS.Color.accent)
+                    .frame(maxWidth: 240)
+                    .accessibilityLabel("Building your avatar")
+                    .accessibilityValue("\(min(progress, 100)) percent complete")
+            } else {
+                ProgressView()
+                    .tint(DS.Color.accent)
+                    .scaleEffect(1.4)
+                    .accessibilityLabel("Building your avatar")
+            }
             Text("Building your avatar…").font(.title3.bold()).foregroundStyle(DS.Color.primaryText)
-            Text("Validating your scan, estimating measurements, and generating a mobile-ready 3D model.")
+            Text(stageDescription)
                 .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)
+        }
+    }
+
+    /// Mirrors the pipeline's own stage markers (15 validate / 55 generate /
+    /// 85 publish) so the copy tracks what is actually happening.
+    private var stageDescription: String {
+        switch progress ?? 0 {
+        case ..<55: return "Validating your scan photos."
+        case ..<85: return "Estimating your measurements and building the 3D model."
+        default: return "Finishing up your avatar."
         }
     }
 
     private func completed(_ avatar: AvatarDTO) -> some View {
         VStack(spacing: 18) {
             Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 44)).foregroundStyle(Theme.accent)
+                .font(.largeTitle).foregroundStyle(DS.Color.accent)
             Text("Avatar ready!").font(.title.bold()).foregroundStyle(DS.Color.primaryText)
             AvatarCard(avatar: avatar)
             Button("Done") { coordinator.onFinish() }
@@ -55,7 +82,7 @@ struct ProcessingView: View {
     private var failed: some View {
         VStack(spacing: 14) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 40)).foregroundStyle(.orange)
+                .font(.largeTitle).foregroundStyle(DS.Color.warning)
             Text(errorCode == "network_unreachable"
                  ? "Couldn’t Reach the Server"
                  : "Scan Didn’t Pass Quality Checks")
@@ -98,6 +125,7 @@ struct ProcessingView: View {
                 failures = 0
                 status = job.status
                 errorCode = job.errorCode
+                progress = job.progress
                 if job.status == "completed" {
                     avatar = (try? await session.api.avatars())?.first
                     polling = false
