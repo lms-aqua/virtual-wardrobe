@@ -64,12 +64,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Compose is validated against .env.example rather than a real .env, so
-      # this also proves the stack does not depend on uncommitted local files.
+      # The api and worker services declare `env_file: ../.env`, which Compose
+      # resolves independently of --env-file, so the file has to exist on disk.
+      # Seeding it from the committed .env.example is deliberate: it proves the
+      # stack starts from documented configuration alone and never depends on
+      # an uncommitted local .env.
+      - name: Seed .env from the committed example
+        run: cp .env.example .env
+
       - name: Validate Compose config
         run: |
-          docker compose -f infrastructure/docker-compose.yml \
-            --env-file .env.example config --quiet
+          docker compose -f infrastructure/docker-compose.yml config --quiet
           echo "compose config valid"
 
       # The worker shares the api build context, so building the api image
