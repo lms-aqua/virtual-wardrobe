@@ -26,7 +26,7 @@ struct MeasurementsView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
-                        Text("Estimated from your scan, shown in \(Units.system.suffix). Tweak any value and save — your 3D avatar updates to match.")
+                        Text("Estimated from your height, shown in \(Units.system.suffix). The scan builds your avatar but does not measure you — these are proportional estimates. Enter your real measurements here for an accurate fit; your 3D avatar updates to match.")
                             .font(.footnote).foregroundStyle(DS.Color.secondaryText)
                         group {
                             row("Height", unit: Units.system.suffix, text: $fields.height)

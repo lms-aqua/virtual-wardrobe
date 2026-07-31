@@ -2,7 +2,7 @@ import SwiftUI
 
 @MainActor
 final class ScanFlowModel: ObservableObject {
-    enum Phase { case idle, countdown, capturing, uploading, processing }
+    enum Phase { case idle, countdown, capturing, validating, uploading, processing }
 
     @Published var phase: Phase = .idle
     @Published var captured = 0
@@ -65,6 +65,26 @@ final class ScanFlowModel: ObservableObject {
                 frames.append(ImageUtils.downscaledJPEG(raw))
                 captured = i + 1
                 try? await Task.sleep(nanoseconds: 300_000_000)
+            }
+
+            // Refuse to submit a scan with no visible body. Nothing downstream
+            // looks at these pixels — the server derives measurements from the
+            // entered height — so without this the app happily accepted a wall
+            // and returned a full set of "measurements".
+            phase = .validating
+            status = "Checking your photos…"
+            let framesToCheck = frames
+            let looksLikeAPerson = await Task.detached(priority: .userInitiated) {
+                BodyDetector.framesLookLikeAPerson(framesToCheck)
+            }.value
+            guard looksLikeAPerson else {
+                phase = .idle
+                countdown = nil
+                captured = 0
+                frames.removeAll()
+                error = "We couldn't see a person in those photos. Put your whole "
+                    + "body in frame, in good light, and try again."
+                return
             }
 
             // Upload frames concurrently (much faster than sequential).
@@ -194,6 +214,7 @@ struct ScanFlowView: View {
     private var phaseLabel: String {
         switch model.phase {
         case .capturing: return "Capturing \(model.captured)/\(model.targetFrames)"
+        case .validating: return "Checking your photos…"
         case .uploading: return "Uploading \(model.uploaded)/\(model.targetFrames)"
         case .processing: return "Processing…"
         default: return ""
