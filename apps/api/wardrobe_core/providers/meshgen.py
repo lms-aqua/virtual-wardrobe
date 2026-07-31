@@ -1,9 +1,11 @@
 """Real parametric humanoid mesh generation → GLB bytes.
 
-This builds an ACTUAL 3D body mesh (not an empty placeholder) from the user's
-measurements using primitive geometry welded together. It is still a stylized
-parametric estimate, NOT a photogrammetric reconstruction — do not present it as
-a real body scan. Any glTF viewer (web, AR QuickLook) can load the result.
+Builds a SMOOTH, single-surface anatomical body from the user's measurements
+using a signed-distance field (a skeleton of tapered spheres blended with a
+smooth-union) sampled on a voxel grid and polygonised with marching cubes, then
+Taubin-smoothed. This is a genuine parametric body — NOT a photogrammetric
+reconstruction and NOT a likeness of the person's face/identity (that needs a
+real capture pipeline). Do not present it as a real body scan.
 """
 
 from __future__ import annotations
@@ -12,73 +14,91 @@ import math
 
 import numpy as np
 import trimesh
+from skimage import measure
 
 
-def _r(circ_cm: float | None, fallback_m: float) -> float:
-    """Circumference (cm) → radius (m); fallback already in meters."""
-    if circ_cm and circ_cm > 0:
-        return (circ_cm / 100.0) / (2 * math.pi)
-    return fallback_m
+def _r(circ_cm: float | None, fb_m: float) -> float:
+    return (circ_cm / 100.0) / (2 * math.pi) if circ_cm and circ_cm > 0 else fb_m
 
 
-def _m(cm: float | None, fallback_m: float) -> float:
-    return (cm / 100.0) if cm and cm > 0 else fallback_m
+def _m(cm: float | None, fb_m: float) -> float:
+    return (cm / 100.0) if cm and cm > 0 else fb_m
 
 
-def _cyl(radius: float, p0, p1, sections: int = 20) -> trimesh.Trimesh:
-    return trimesh.creation.cylinder(
-        radius=max(radius, 0.01), segment=np.array([p0, p1], dtype=float), sections=sections
-    )
+def _smin(a, b, k):  # noqa: ANN001 — smooth union of two SDFs
+    h = np.clip(0.5 + 0.5 * (b - a) / k, 0.0, 1.0)
+    return b * (1 - h) + a * h - k * h * (1 - h)
 
 
-def build_avatar_glb(measurements_cm: dict, skin=(217, 181, 156)) -> bytes:
-    m = measurements_cm
+def _bone(a, b, r0, r1, n):  # noqa: ANN001 — spheres along a segment, lerped radius
+    a, b = np.array(a, float), np.array(b, float)
+    return [(a + (b - a) * t, r0 + (r1 - r0) * t) for t in np.linspace(0, 1, n)]
+
+
+def _skeleton(m: dict):
     h = _m(m.get("height_cm"), 1.70)
-    chest_r = _r(m.get("chest_cm"), h * 0.082)
-    waist_r = _r(m.get("waist_cm"), h * 0.068)
-    hip_r = _r(m.get("hip_cm"), h * 0.083)
-    thigh_r = _r(m.get("thigh_cm"), h * 0.055)
-    calf_r = _r(m.get("calf_cm"), h * 0.04)
-    neck_r = _r(m.get("neck_cm"), h * 0.032)
-    inseam = _m(m.get("inseam_cm"), h * 0.45)
-    torso_len = _m(m.get("torso_cm"), h * 0.30)
-    arm_len = _m(m.get("arm_cm"), h * 0.44)
-    shoulder_w = _m(m.get("shoulder_cm"), h * 0.259)
-    head_r = h * 0.047
+    chest_r = _r(m.get("chest_cm"), h * 0.088)
+    waist_r = _r(m.get("waist_cm"), h * 0.072)
+    hip_r = _r(m.get("hip_cm"), h * 0.090)
+    thigh_r = _r(m.get("thigh_cm"), h * 0.058)
+    calf_r = _r(m.get("calf_cm"), h * 0.042)
+    neck_r = _r(m.get("neck_cm"), h * 0.036)
+    arm_r = h * 0.030
+    shoulder_w = _m(m.get("shoulder_cm"), h * 0.26)
+    head_r = h * 0.050
 
-    parts: list[trimesh.Trimesh] = []
-    leg_x = hip_r * 0.55
-    pelvis_y = inseam
-    lower_top = pelvis_y + torso_len * 0.45
-    shoulder_y = pelvis_y + torso_len
+    hip_y, chest_y, shld_y = h * 0.50, h * 0.71, h * 0.82
+    s: list = []
+    s += _bone((0, hip_y, 0), (0, h * 0.61, 0), hip_r, waist_r, 6)
+    s += _bone((0, h * 0.61, 0), (0, chest_y, 0), waist_r, chest_r, 7)
+    s += _bone((0, chest_y, 0), (0, shld_y, 0), chest_r, chest_r * 0.82, 4)
+    s += _bone((-shoulder_w / 2, shld_y, 0), (shoulder_w / 2, shld_y, 0), arm_r * 1.25, arm_r * 1.25, 7)
+    s += _bone((0, shld_y, 0), (0, h * 0.86, 0), neck_r, neck_r, 3)
+    s += [((0, h * 0.925, 0.005), head_r)]
+    for side in (-1, 1):
+        sh = (side * shoulder_w / 2, shld_y, 0)
+        el = (side * (shoulder_w / 2 + 0.02), h * 0.61, 0)
+        wr = (side * (shoulder_w / 2 + 0.03), h * 0.47, 0)
+        s += _bone(sh, el, arm_r * 1.05, arm_r * 0.82, 6)
+        s += _bone(el, wr, arm_r * 0.82, arm_r * 0.6, 6)
+        s += [((wr[0], wr[1] - 0.03, 0.01), arm_r * 0.6)]
+    for side in (-1, 1):
+        hp = (side * hip_r * 0.5, hip_y, 0)
+        kn = (side * hip_r * 0.5, h * 0.27, 0)
+        an = (side * hip_r * 0.5, 0.06, 0)
+        s += _bone(hp, kn, thigh_r, calf_r * 1.05, 7)
+        s += _bone(kn, an, calf_r * 1.05, calf_r * 0.72, 7)
+        s += _bone((side * hip_r * 0.5, 0.04, 0.0),
+                   (side * hip_r * 0.5, 0.03, head_r * 1.6), calf_r * 0.7, calf_r * 0.5, 4)
+    return s
 
-    # Legs (thigh + calf), feet
-    for sx in (-leg_x, leg_x):
-        parts.append(_cyl(thigh_r, [sx, pelvis_y, 0], [sx, pelvis_y * 0.5, 0]))
-        parts.append(_cyl(calf_r, [sx, pelvis_y * 0.5, 0], [sx, 0.02, 0]))
-        foot = trimesh.creation.box(extents=[calf_r * 2, 0.05, head_r * 2.6])
-        foot.apply_translation([sx, 0.03, head_r * 0.6])
-        parts.append(foot)
 
-    # Torso: pelvis→waist and waist→chest
-    parts.append(_cyl((hip_r + waist_r) / 2, [0, pelvis_y, 0], [0, lower_top, 0], sections=28))
-    parts.append(_cyl((waist_r + chest_r) / 2, [0, lower_top, 0], [0, shoulder_y, 0], sections=28))
+def build_avatar_glb(measurements_cm: dict, skin=(219, 182, 157)) -> bytes:
+    spheres = _skeleton(measurements_cm)
+    centers = np.array([c for c, _ in spheres], dtype=float)
+    radii = np.array([r for _, r in spheres], dtype=float)
 
-    # Arms
-    for sx in (-shoulder_w / 2, shoulder_w / 2):
-        parts.append(_cyl(chest_r * 0.28, [sx, shoulder_y, 0], [sx, shoulder_y - arm_len, 0]))
+    zsquash = 1.18   # flatten front-to-back for a human silhouette
+    pad, res, k = 0.06, 0.015, 0.045
+    lo = centers.min(0) - radii.max() - pad
+    hi = centers.max(0) + radii.max() + pad
+    xs = np.arange(lo[0], hi[0], res)
+    ys = np.arange(lo[1], hi[1], res)
+    zs = np.arange(lo[2], hi[2], res)
+    gx, gy, gz = np.meshgrid(xs, ys, zs, indexing="ij")
+    P = np.stack([gx.ravel(), gy.ravel(), gz.ravel() * zsquash], axis=1)
+    cz = centers.copy()
+    cz[:, 2] *= zsquash
 
-    # Neck + head
-    neck_len = head_r * 0.7
-    parts.append(_cyl(neck_r, [0, shoulder_y, 0], [0, shoulder_y + neck_len, 0]))
-    head = trimesh.creation.icosphere(subdivisions=3, radius=head_r)
-    head.apply_translation([0, shoulder_y + neck_len + head_r * 0.9, 0])
-    parts.append(head)
+    D = np.full(P.shape[0], 1e9)
+    for c, r in zip(cz, radii):
+        D = _smin(D, np.sqrt(((P - c) ** 2).sum(1)) - r, k)
+    grid = D.reshape(gx.shape)
 
-    body = trimesh.util.concatenate(parts)
-    body.visual = trimesh.visual.ColorVisuals(
-        mesh=body, vertex_colors=np.tile([*skin, 255], (len(body.vertices), 1))
-    )
-    # Center on the ground, facing +Z.
-    body.apply_translation([0, 0, 0])
-    return body.export(file_type="glb")
+    verts, faces, _n, _v = measure.marching_cubes(grid, level=0.0, spacing=(res, res, res))
+    verts += lo
+    verts[:, 2] /= zsquash
+    mesh = trimesh.Trimesh(vertices=verts, faces=faces)
+    trimesh.smoothing.filter_taubin(mesh, iterations=12)
+    mesh.visual.vertex_colors = np.tile([*skin, 255], (len(mesh.vertices), 1))
+    return mesh.export(file_type="glb")

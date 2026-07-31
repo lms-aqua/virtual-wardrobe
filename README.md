@@ -97,8 +97,22 @@ pnpm test:e2e   # Playwright end-to-end (Phase 6)
 - Account/scan hard-deletion with a test that proves assets 404 afterward.
 - Secrets only via environment; `.env` is git-ignored, only `.env.example` ships.
 
-## Roadmap
+## Status & roadmap
 
-Phases 1–2 (architecture + foundation) are in place. Phase 3 adds auth, consent,
-private storage, signed uploads, authorization tests, and deletion. See
-`docs/architecture.md` for the full phase plan and the MVP-vs-future boundary.
+**Built so far:** auth (magic link), consent, private storage + signed uploads,
+authorization + deletion tests, mock scanning pipeline, a **real
+measurement-driven 3D avatar** (smooth SDF body → GLB), garment catalog + admin,
+background worker with job progress, preferences sync, observability, a native
+SwiftUI iOS app (guided/360°/photo/AR capture, 3D try-on, wardrobe, sideloaded
+via AltStore/AppDB), and a Next.js web app with a react-three-fiber GLB viewer.
+
+**Honest limitations (not yet real):** the avatar is a *stylized parametric
+body* shaped by measurements — **not** photogrammetry, SMPL-X, a digital twin,
+or a likeness of the person's face. Garments render as fitted shells, not
+physically-simulated cloth. Avatar generation, scan-quality scoring, and garment
+fitting remain mock/measurement-based behind swappable provider interfaces.
+
+**Next:** real body reconstruction (SMPL-X / photogrammetry) and cloth
+simulation behind those interfaces; production auth (SMTP + Sign in with Apple);
+harden the web (move token off `localStorage`), enforce CI lint, and add web to
+Compose. See `docs/architecture.md` for the design and MVP-vs-future boundary.
