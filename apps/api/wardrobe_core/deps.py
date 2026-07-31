@@ -11,7 +11,7 @@ from __future__ import annotations
 import time
 import uuid
 from collections.abc import AsyncIterator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
@@ -58,11 +58,11 @@ async def get_current_user(
         ) from None
 
     session = await db.get(Session, session_id)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expires_at = session.expires_at if session else None
     # SQLite returns naive datetimes; normalize to UTC for a safe comparison.
     if expires_at is not None and expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
+        expires_at = expires_at.replace(tzinfo=UTC)
     if (
         session is None
         or session.revoked_at is not None

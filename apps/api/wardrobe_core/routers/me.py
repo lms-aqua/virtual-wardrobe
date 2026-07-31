@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -57,7 +57,7 @@ async def get_preferences(
         await db.execute(select(UserPreference).where(UserPreference.user_id == user.id))
     ).scalar_one_or_none()
     if pref is None:
-        return PreferenceOut(data={}, updated_at=datetime.now(timezone.utc))
+        return PreferenceOut(data={}, updated_at=datetime.now(UTC))
     return PreferenceOut(data=pref.data, updated_at=pref.updated_at)
 
 
@@ -104,6 +104,6 @@ async def revoke_session(
     sess = await db.get(Session, session_id)
     if sess is None or sess.user_id != user.id:
         raise HTTPException(status_code=404, detail="not found")
-    sess.revoked_at = datetime.now(timezone.utc)
+    sess.revoked_at = datetime.now(UTC)
     await audit.record(db, action="session.revoked", actor_user_id=user.id,
                        target_type="session", target_id=str(sess.id))

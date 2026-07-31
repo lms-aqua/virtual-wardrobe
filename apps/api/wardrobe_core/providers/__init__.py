@@ -14,9 +14,9 @@ from wardrobe_core.providers.base import (
     ScanQualityService,
 )
 from wardrobe_core.providers.mock import (
+    DeterministicScanQualityService,
     MeasurementScalingFittingEngine,
     MockAvatarGenerationProvider,
-    DeterministicScanQualityService,
 )
 
 _avatar_provider: AvatarGenerationProvider = MockAvatarGenerationProvider()

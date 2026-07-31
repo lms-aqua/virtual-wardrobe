@@ -104,3 +104,12 @@ services:
         condition: service_healthy
     networks: [internal]
     command: dramatiq wardrobe_core.worker:broker --processes 2 --threads 4
+
+  web:
+    build:
+      context: ../apps/web
+    container_name: wardrobe-web
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: https://wardrobe-api.losthosting.com
+    networks: [internal, auth_authnet]   # auth_authnet so Caddy reaches it

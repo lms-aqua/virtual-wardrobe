@@ -43,7 +43,7 @@ def _skeleton(m: dict):
     thigh_r = _r(m.get("thigh_cm"), h * 0.058)
     calf_r = _r(m.get("calf_cm"), h * 0.042)
     neck_r = _r(m.get("neck_cm"), h * 0.036)
-    arm_r = h * 0.030
+    arm_r = h * 0.034
     shoulder_w = _m(m.get("shoulder_cm"), h * 0.26)
     head_r = h * 0.050
 
@@ -51,17 +51,23 @@ def _skeleton(m: dict):
     s: list = []
     s += _bone((0, hip_y, 0), (0, h * 0.61, 0), hip_r, waist_r, 6)
     s += _bone((0, h * 0.61, 0), (0, chest_y, 0), waist_r, chest_r, 7)
-    s += _bone((0, chest_y, 0), (0, shld_y, 0), chest_r, chest_r * 0.82, 4)
-    s += _bone((-shoulder_w / 2, shld_y, 0), (shoulder_w / 2, shld_y, 0), arm_r * 1.25, arm_r * 1.25, 7)
-    s += _bone((0, shld_y, 0), (0, h * 0.86, 0), neck_r, neck_r, 3)
-    s += [((0, h * 0.925, 0.005), head_r)]
+    s += _bone((0, chest_y, 0), (0, shld_y, 0), chest_r, chest_r * 0.85, 4)
+    # Shoulder yoke + rounded deltoids
+    s += _bone((-shoulder_w / 2, shld_y, 0), (shoulder_w / 2, shld_y, 0),
+               arm_r * 1.2, arm_r * 1.2, 7)
     for side in (-1, 1):
-        sh = (side * shoulder_w / 2, shld_y, 0)
+        s += [((side * shoulder_w / 2, shld_y + 0.005, 0), arm_r * 1.5)]  # deltoid
+    # Neck + head (sphere + jaw for an ovoid head)
+    s += _bone((0, shld_y, 0), (0, h * 0.865, 0), neck_r * 1.1, neck_r, 3)
+    s += [((0, h * 0.930, 0.004), head_r)]
+    s += [((0, h * 0.905, 0.02), head_r * 0.72)]   # jaw / chin
+    for side in (-1, 1):
+        sh = (side * shoulder_w / 2, shld_y - 0.01, 0)
         el = (side * (shoulder_w / 2 + 0.02), h * 0.61, 0)
         wr = (side * (shoulder_w / 2 + 0.03), h * 0.47, 0)
-        s += _bone(sh, el, arm_r * 1.05, arm_r * 0.82, 6)
-        s += _bone(el, wr, arm_r * 0.82, arm_r * 0.6, 6)
-        s += [((wr[0], wr[1] - 0.03, 0.01), arm_r * 0.6)]
+        s += _bone(sh, el, arm_r * 1.15, arm_r * 0.9, 6)
+        s += _bone(el, wr, arm_r * 0.9, arm_r * 0.66, 6)
+        s += [((wr[0], wr[1] - 0.035, 0.015), arm_r * 0.68)]  # hand
     for side in (-1, 1):
         hp = (side * hip_r * 0.5, hip_y, 0)
         kn = (side * hip_r * 0.5, h * 0.27, 0)
@@ -91,7 +97,7 @@ def build_avatar_glb(measurements_cm: dict, skin=(219, 182, 157)) -> bytes:
     cz[:, 2] *= zsquash
 
     D = np.full(P.shape[0], 1e9)
-    for c, r in zip(cz, radii):
+    for c, r in zip(cz, radii, strict=False):
         D = _smin(D, np.sqrt(((P - c) ** 2).sum(1)) - r, k)
     grid = D.reshape(gx.shape)
 
@@ -100,5 +106,13 @@ def build_avatar_glb(measurements_cm: dict, skin=(219, 182, 157)) -> bytes:
     verts[:, 2] /= zsquash
     mesh = trimesh.Trimesh(vertices=verts, faces=faces)
     trimesh.smoothing.filter_taubin(mesh, iterations=12)
-    mesh.visual.vertex_colors = np.tile([*skin, 255], (len(mesh.vertices), 1))
+
+    h = _m(measurements_cm.get("height_cm"), 1.70)
+    head_r, head_cy = h * 0.050, h * 0.930
+    verts_out = mesh.vertices
+    vc = np.tile([*skin, 255], (len(verts_out), 1))
+    # Hair: colour the top + back of the scalp dark; leave the face (front, lower).
+    hair = (verts_out[:, 1] > head_cy + head_r * 0.10) & (verts_out[:, 2] < head_r * 0.28)
+    vc[hair] = [58, 42, 34, 255]
+    mesh.visual.vertex_colors = vc
     return mesh.export(file_type="glb")

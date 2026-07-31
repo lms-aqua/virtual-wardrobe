@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from wardrobe_core.deps import get_admin_user, get_db
-from wardrobe_core.models import Avatar, AuditEvent, BodyScan, Garment, Outfit, User
+from wardrobe_core.models import AuditEvent, Avatar, BodyScan, Garment, Outfit, User
 from wardrobe_core.schemas import AuditEventOut
 
 router = APIRouter(prefix="/admin", tags=["admin"])

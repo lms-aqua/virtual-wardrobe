@@ -20,8 +20,8 @@ import pytest  # noqa: E402
 import pytest_asyncio  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from wardrobe_core.db import Base, get_engine, get_sessionmaker  # noqa: E402
 from wardrobe_core import models  # noqa: E402,F401  (populate metadata)
+from wardrobe_core.db import Base, get_engine, get_sessionmaker  # noqa: E402
 from wardrobe_core.main import create_app  # noqa: E402
 from wardrobe_core.storage import InMemoryStorage, set_storage  # noqa: E402
 

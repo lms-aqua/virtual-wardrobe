@@ -8,7 +8,7 @@ revokes all sessions so the account cannot be used again.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import delete, select, update
 
@@ -79,7 +79,7 @@ async def run_deletion_request(request_id: uuid.UUID) -> None:
             await db.execute(
                 update(Session)
                 .where(Session.user_id == user_id, Session.revoked_at.is_(None))
-                .values(revoked_at=datetime.now(timezone.utc))
+                .values(revoked_at=datetime.now(UTC))
             )
             # Scrub PII + tombstone the user (email replaced to free the unique key).
             await db.execute(
@@ -93,7 +93,7 @@ async def run_deletion_request(request_id: uuid.UUID) -> None:
             )
 
         req.status = DeletionStatus.completed
-        req.completed_at = datetime.now(timezone.utc)
+        req.completed_at = datetime.now(UTC)
         await audit.record(
             db, action="account.deletion_completed", actor_user_id=user_id,
             target_type="deletion_request", target_id=str(req.id),

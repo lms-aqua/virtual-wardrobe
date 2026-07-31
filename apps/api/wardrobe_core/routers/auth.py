@@ -9,7 +9,7 @@ token for native clients.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
@@ -74,7 +74,7 @@ async def verify_magic_link(
 
     session = Session(
         user_id=user.id,
-        expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.session_ttl_seconds),
+        expires_at=datetime.now(UTC) + timedelta(seconds=settings.session_ttl_seconds),
     )
     db.add(session)
     await db.flush()

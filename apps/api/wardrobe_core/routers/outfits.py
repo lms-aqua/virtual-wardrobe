@@ -8,8 +8,8 @@ import uuid
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from wardrobe_core import audit
 from wardrobe_core.deps import get_current_user, get_db

@@ -19,7 +19,7 @@ from wardrobe_core.config import get_settings
 from wardrobe_core.db import get_sessionmaker
 from wardrobe_core.enums import AvatarStatus, JobStatus, ScanStatus
 from wardrobe_core.logging import get_logger
-from wardrobe_core.models import Avatar, AvatarMeasurement, BodyScan, ScanImage, ScanJob
+from wardrobe_core.models import Avatar, AvatarMeasurement, BodyScan, ScanJob
 from wardrobe_core.providers import get_avatar_provider, get_quality_service
 from wardrobe_core.storage import avatar_mesh_key, avatar_thumb_key, get_storage
 from wardrobe_core.uploads import validate_image
