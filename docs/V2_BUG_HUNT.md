@@ -42,6 +42,8 @@ then reproduced with a failing test or a direct observation.
 | BUG-010 | P2 | iOS | Any network error treated as sign-out | CI verified |
 | BUG-011 | P2 | iOS | Raw backend response body rendered to users | CI verified |
 | BUG-015 | **P1** | Worker | Unexpected pipeline error leaves job stuck forever | CI verified |
+| BUG-012 | P3 | iOS | `PhotoImportView` cancellation runs remaining polls with no delay | CI verified |
+| BUG-016 | P2 | iOS / contract | Real job progress reported by the API was never decoded or shown | CI verified |
 
 ---
 
@@ -269,11 +271,32 @@ adds `isAuthFailure`, which is what makes BUG-010 fixable.
 
 ---
 
+### Contracts verified clean (negative results)
+
+Checked and found correct — recorded so they are not re-litigated:
+
+| Contract | Result |
+|---|---|
+| `JobStatus` enum vs client string literals | Exact match on `"completed"` / `"failed"`; the polling terminator is sound |
+| Non-optional Swift fields vs backend omissions | No decoding crash paths — `is_mock`, `status`, `id` always serialized |
+| Scan upload object key | `view` constrained to `^[a-z0-9_]{1,32}$`; cannot traverse out of `users/{id}/scans/{id}/`, content type allowlisted |
+| Session token storage | Keychain, not UserDefaults |
+
+### BUG-016 — Real processing progress was never shown · **P2**
+
+`JobOut.progress` is set by the pipeline at every stage (15 validate / 55 generate /
+85 publish / 100 done) and `JobDTO` did not decode it, so the client showed an
+indeterminate spinner while precise progress existed server-side. Now decoded as an
+optional (older backends still decode) and rendered as a determinate bar **only when a
+real value is present** — no fabricated percentages — with a VoiceOver value and stage
+copy that tracks the pipeline's own markers.
+
+**Files:** `Core/Models.swift`, `Scan/ProcessingView.swift` · **Status:** CI verified.
+
 ## Deferred, with reasons
 
 | ID | Sev | Issue | Why deferred |
 |---|---|---|---|
-| BUG-012 | P3 | `PhotoImportView` uses the same `try?`-on-`Task.sleep` shape as BUG-007 | Bounded to 40 iterations, so cancellation costs at most 40 fast requests rather than an unbounded spin. Real but low impact. |
 | BUG-013 | P2 | 27 sites use `try? await session.api…`, rendering failures as empty content | Systemic. Fixed where it caused a false success or a stuck state (Saved Outfits, outfit save, auth). A blanket rewrite of every read path is a larger change than a bug hunt should carry, and each site needs its own error UI. |
 | BUG-014 | P3 | Cold offline launch shows the welcome screen | Needs a cached user snapshot with its own invalidation rules — new persistence surface, not a bug fix. |
 
