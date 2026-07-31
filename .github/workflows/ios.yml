@@ -84,20 +84,54 @@ jobs:
           zip -qry VirtualWardrobe-unsigned.ipa Payload
           echo "IPA_SIZE=$(stat -f%z VirtualWardrobe-unsigned.ipa)" >> "$GITHUB_ENV"
 
-      - name: Inject real .ipa size into the manifest copy
+      - name: Inject real .ipa size into the manifest
         run: |
           set -eo pipefail
           python3 - <<'PY'
           import json, os
-          m = json.load(open("altstore-source.json"))
+
+          version = os.environ["VERSION"]
           size = int(os.environ["IPA_SIZE"])
+
+          with open("altstore-source.json", encoding="utf-8") as f:
+              m = json.load(f)
           app = m["apps"][0]
+
+          # Only this release's entry gets the new size. The previous version of
+          # this step stamped it onto EVERY entry, which silently rewrote the
+          # recorded size of every historical release in the published manifest.
           app["size"] = size
-          for v in app.get("versions", []):
-              v["size"] = size
-          json.dump(m, open("altstore-source.json", "w"), indent=2)
-          print("manifest size set to", size)
+          matches = [v for v in app.get("versions", []) if v.get("version") == version]
+          if len(matches) != 1:
+              raise SystemExit(
+                  f"manifest must contain exactly one entry for {version}, found {len(matches)}"
+              )
+          matches[0]["size"] = size
+
+          with open("altstore-source.json", "w", encoding="utf-8") as f:
+              json.dump(m, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          print(f"size {size} applied to app + version {version} only; "
+                f"{len(app.get('versions', [])) - 1} historical entries untouched")
           PY
+
+      - name: Commit the corrected manifest back to main
+        # The main README points AltStore at the raw main copy, so that file —
+        # not just the release asset — has to carry the real size. [skip ci]
+        # prevents this push from retriggering the workflow (the manifest lives
+        # under the apps/ios/** path filter).
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -eo pipefail
+          if git diff --quiet -- altstore-source.json; then
+            echo "manifest unchanged; nothing to commit"; exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add altstore-source.json
+          git commit -m "iOS $VERSION: record real .ipa size in AltStore manifest [skip ci]"
+          git push origin HEAD:main
+          echo "manifest committed to main"
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
