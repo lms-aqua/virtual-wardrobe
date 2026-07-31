@@ -24,6 +24,7 @@ struct HomeView: View {
     @EnvironmentObject var session: AuthStore
     @State private var avatars: [AvatarDTO] = []
     @State private var loading = true
+    @State private var loadFailed = false
     @State private var startScan = false
     @State private var showPhotoImport = false
     @State private var showAR = false
@@ -39,6 +40,8 @@ struct HomeView: View {
                         greeting
                         if loading {
                             ProgressView().tint(DS.Color.accent).frame(maxWidth: .infinity).padding(.top, 40)
+                        } else if loadFailed {
+                            loadError
                         } else if let avatar = avatars.first {
                             AvatarCard(avatar: avatar)
                             NavigationLink {
@@ -116,6 +119,26 @@ struct HomeView: View {
         }
     }
 
+    /// A failed fetch used to fall through to "No avatar yet", telling someone
+    /// who already has an avatar to redo a multi-minute body scan. It now says
+    /// what actually happened and offers a retry.
+    private var loadError: some View {
+        VStack(spacing: DS.Space.m) {
+            Image(systemName: "wifi.exclamationmark")
+                .font(.largeTitle).foregroundStyle(DS.Color.warning)
+                .accessibilityHidden(true)
+            Text("Couldn’t Load Your Avatar").font(.headline)
+                .foregroundStyle(DS.Color.primaryText)
+            Text("Your avatar is still safe. Check your connection and try again.")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(DS.Color.secondaryText)
+            Button("Try Again") { Task { await load() } }
+                .buttonStyle(DSSecondaryButton())
+        }
+        .frame(maxWidth: .infinity)
+        .card()
+    }
+
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "figure.stand")
@@ -147,8 +170,15 @@ struct HomeView: View {
 
     private func load() async {
         loading = true
-        avatars = (try? await session.api.avatars()) ?? []
-        loading = false
+        defer { loading = false }
+        do {
+            avatars = try await session.api.avatars()
+            loadFailed = false
+        } catch {
+            // Previously `try? ... ?? []`, which rendered a network failure as
+            // an empty account.
+            loadFailed = true
+        }
     }
 }
 
