@@ -41,6 +41,7 @@ then reproduced with a failing test or a direct observation.
 | BUG-009 | P2 | iOS | Double-tap Save creates duplicate outfits | CI verified |
 | BUG-010 | P2 | iOS | Any network error treated as sign-out | CI verified |
 | BUG-011 | P2 | iOS | Raw backend response body rendered to users | CI verified |
+| BUG-015 | **P1** | Worker | Unexpected pipeline error leaves job stuck forever | CI verified |
 
 ---
 
@@ -283,8 +284,8 @@ adds `isAuthFailure`, which is what makes BUG-010 fixable.
 | 1 | Build and compiler defects | iOS compiles clean on Xcode 26.6 / Swift 6.3.3; both workflow YAMLs parse; no target-membership or availability errors |
 | 2 | Crash and state defects | Force-unwrap sweep: one `as!` remains (`CameraPreview`), safe by construction via `layerClass`. Concurrency: BUG-007 spin loop found and fixed; `Task.isCancelled` was absent everywhere outside `ImageCache` |
 | 3 | API and data defects | BUG-001, BUG-002, BUG-003 |
-| 4 | Processing defects | BUG-006, BUG-007 (unbounded retry, no terminal transport-failure state); `PhotoImportView` variant logged as BUG-012 |
-| 5 | UI and accessibility | Fixed-size icons ignoring Dynamic Type fixed in v2.5; failure copy no longer blames scan quality for a network fault |
+| 4 | Processing defects | Client polling (BUG-006, BUG-007) and the worker terminal-state gap (BUG-015). Upload key construction audited and found **correctly defended** — `view` is constrained to `^[a-z0-9_]{1,32}$` so it cannot traverse out of `users/{id}/scans/{id}/`, and content-type is allowlisted. **Still not searched:** queue redelivery, duplicate job suppression, orphaned storage objects |
+| 5 | UI and accessibility | **Partial, and largely unsearchable here.** Fixed-size icons and failure copy addressed by inspection. Layout, Dark Mode contrast, Dynamic Type reflow, VoiceOver order and focus cannot be assessed without a running app |
 | 6 | Security and privacy | BUG-001 cross-account reference; BUG-011 raw backend body reaching the UI; token confirmed in Keychain, not UserDefaults; no secrets committed |
 | 7 | Full regression | Backend 24/24, ruff clean, web typecheck + production build, container builds, iOS compile — all green on the release commit |
 

@@ -92,3 +92,35 @@ def avatar_mesh_key_for(user_id: str, avatar_id: str) -> str:
     import uuid
 
     return avatar_mesh_key(uuid.UUID(user_id), uuid.UUID(avatar_id))
+
+
+async def test_pipeline_reaches_terminal_failed_on_unexpected_error(
+    client, monkeypatch  # noqa: ANN001
+) -> None:
+    """BUG-015 — an unexpected pipeline exception left the job stuck forever.
+
+    Only the explicit quality check could fail a job. Any other exception
+    propagated out of process_scan, Dramatiq retried and gave up silently, and
+    the scan and job stayed pinned in `processing` with no terminal state — so
+    the client polled a job that would never resolve.
+    """
+    import wardrobe_core.services.processing as processing
+    from tests.conftest import auth_headers, grant_scan_consent
+    from tests.helpers import run_full_scan
+
+    class _Boom:
+        def generate(self, **_kwargs):  # noqa: ANN003, ANN201
+            raise RuntimeError("mesh generation exploded")
+
+    monkeypatch.setattr(processing, "get_avatar_provider", lambda: _Boom())
+
+    headers = auth_headers(client, "ivan@example.com")
+    grant_scan_consent(client, headers)
+    result = run_full_scan(client, headers)
+
+    job = client.get(f"/jobs/{result['job_id']}", headers=headers).json()
+    assert job["status"] == "failed", f"job did not reach a terminal state: {job}"
+    assert job["error_code"] == "processing_error", job
+
+    scan = client.get(f"/scans/{result['scan_id']}", headers=headers).json()
+    assert scan["status"] == "failed", scan

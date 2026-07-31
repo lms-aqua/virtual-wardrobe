@@ -71,89 +71,116 @@ async def process_scan(scan_id: uuid.UUID) -> None:
             job.progress = 15
         await db.commit()
 
-        # 1) Load + validate every uploaded image (magic-byte + size re-check).
-        images: dict[str, bytes] = {}
-        allowed = settings.allowed_image_mime_set
-        for img in scan.images:
-            if not img.uploaded:
-                continue
-            try:
-                data = storage.get_object(settings.s3_bucket_scans, img.object_key)
-            except Exception:  # noqa: BLE001
-                await fail("image_fetch_failed")
+        try:
+            # 1) Load + validate every uploaded image (magic-byte + size re-check).
+            images: dict[str, bytes] = {}
+            allowed = settings.allowed_image_mime_set
+            for img in scan.images:
+                if not img.uploaded:
+                    continue
+                try:
+                    data = storage.get_object(settings.s3_bucket_scans, img.object_key)
+                except Exception:  # noqa: BLE001
+                    await fail("image_fetch_failed")
+                    return
+                ok, detail = validate_image(
+                    data, allowed=allowed, max_bytes=settings.max_upload_bytes
+                )
+                if not ok:
+                    await fail(f"invalid_image:{detail}")
+                    return
+                images[img.view] = data
+
+            # 2) Quality gate.
+            quality = get_quality_service().evaluate(images)
+            scan.quality_score = quality.score
+            scan.quality_reasons = quality.reasons
+            if not quality.passed:
+                await fail("low_quality")
                 return
-            ok, detail = validate_image(
-                data, allowed=allowed, max_bytes=settings.max_upload_bytes
+
+            # 3) Generate avatar (real parametric mesh).
+            scan.status = ScanStatus.processing
+            if job:
+                job.progress = 55
+            await db.commit()
+            result = get_avatar_provider().generate(
+                images=images, height_cm=scan.height_cm, hints_cm={}
             )
-            if not ok:
-                await fail(f"invalid_image:{detail}")
-                return
-            images[img.view] = data
 
-        # 2) Quality gate.
-        quality = get_quality_service().evaluate(images)
-        scan.quality_score = quality.score
-        scan.quality_reasons = quality.reasons
-        if not quality.passed:
-            await fail("low_quality")
-            return
+            avatar = Avatar(
+                user_id=scan.user_id,
+                scan_id=scan.id,
+                version=1,
+                confidence=result.confidence,
+                status=AvatarStatus.processing,
+            )
+            db.add(avatar)
+            await db.flush()
 
-        # 3) Generate avatar (real parametric mesh).
-        scan.status = ScanStatus.processing
-        if job:
-            job.progress = 55
-        await db.commit()
-        result = get_avatar_provider().generate(
-            images=images, height_cm=scan.height_cm, hints_cm={}
-        )
+            # 4) Publish GLB + thumbnail to the PRIVATE avatars bucket.
+            scan.status = ScanStatus.optimizing
+            if job:
+                job.progress = 85
+            mkey = avatar_mesh_key(scan.user_id, avatar.id)
+            tkey = avatar_thumb_key(scan.user_id, avatar.id)
+            storage.put_object(
+                settings.s3_bucket_avatars, mkey, result.glb_bytes, "model/gltf-binary"
+            )
+            storage.put_object(settings.s3_bucket_avatars, tkey, result.thumbnail_png, "image/png")
+            avatar.mesh_key = mkey
+            avatar.thumb_key = tkey
+            avatar.status = AvatarStatus.completed
 
-        avatar = Avatar(
-            user_id=scan.user_id,
-            scan_id=scan.id,
-            version=1,
-            confidence=result.confidence,
-            status=AvatarStatus.processing,
-        )
-        db.add(avatar)
-        await db.flush()
+            m = AvatarMeasurement(avatar_id=avatar.id)
+            for field in _MEASUREMENT_FIELDS:
+                if field in result.measurements_cm:
+                    setattr(m, field, result.measurements_cm[field])
+            m.shape_params = result.shape_params
+            db.add(m)
 
-        # 4) Publish GLB + thumbnail to the PRIVATE avatars bucket.
-        scan.status = ScanStatus.optimizing
-        if job:
-            job.progress = 85
-        mkey = avatar_mesh_key(scan.user_id, avatar.id)
-        tkey = avatar_thumb_key(scan.user_id, avatar.id)
-        storage.put_object(settings.s3_bucket_avatars, mkey, result.glb_bytes, "model/gltf-binary")
-        storage.put_object(settings.s3_bucket_avatars, tkey, result.thumbnail_png, "image/png")
-        avatar.mesh_key = mkey
-        avatar.thumb_key = tkey
-        avatar.status = AvatarStatus.completed
+            # 5) Privacy: hard-delete raw scan images unless retained.
+            if settings.delete_raw_scans_after_avatar and not scan.retain_raw_images:
+                for img in list(scan.images):
+                    storage.delete_object(settings.s3_bucket_scans, img.object_key)
+                    await db.delete(img)
+                await audit.record(
+                    db, action="scan.raw_images_deleted", actor_user_id=scan.user_id,
+                    target_type="scan", target_id=str(scan.id),
+                )
 
-        m = AvatarMeasurement(avatar_id=avatar.id)
-        for field in _MEASUREMENT_FIELDS:
-            if field in result.measurements_cm:
-                setattr(m, field, result.measurements_cm[field])
-        m.shape_params = result.shape_params
-        db.add(m)
-
-        # 5) Privacy: hard-delete raw scan images unless retained.
-        if settings.delete_raw_scans_after_avatar and not scan.retain_raw_images:
-            for img in list(scan.images):
-                storage.delete_object(settings.s3_bucket_scans, img.object_key)
-                await db.delete(img)
+            scan.status = ScanStatus.completed
+            if job:
+                job.status = JobStatus.completed
+                job.progress = 100
             await audit.record(
-                db, action="scan.raw_images_deleted", actor_user_id=scan.user_id,
-                target_type="scan", target_id=str(scan.id),
+                db, action="avatar.created", actor_user_id=scan.user_id,
+                target_type="avatar", target_id=str(avatar.id),
+                meta={"is_mock": result.is_mock, "confidence": result.confidence},
             )
-
-        scan.status = ScanStatus.completed
-        if job:
-            job.status = JobStatus.completed
-            job.progress = 100
-        await audit.record(
-            db, action="avatar.created", actor_user_id=scan.user_id,
-            target_type="avatar", target_id=str(avatar.id),
-            meta={"is_mock": result.is_mock, "confidence": result.confidence},
-        )
-        await db.commit()
-        log.info("processing.completed", scan_id=str(scan_id), avatar_id=str(avatar.id))
+            await db.commit()
+            log.info("processing.completed", scan_id=str(scan_id), avatar_id=str(avatar.id))
+        except Exception:
+            # Terminal state for unexpected failures. Previously only the
+            # explicit quality check could fail the job: any other exception
+            # (mesh generation, storage put, measurement mapping, raw-image
+            # deletion) propagated out, Dramatiq retried and then gave up
+            # silently, and the scan and job stayed pinned in processing
+            # forever while the client polled a job that would never resolve.
+            #
+            # Automatic worker retry on this path is deliberately traded for a
+            # guaranteed terminal state: the exception is recorded and swallowed
+            # rather than re-raised, so behaviour is identical inline and on the
+            # worker. The user-facing retry (rescan) is unaffected.
+            await db.rollback()
+            log.exception("processing.unexpected_failure", scan_id=str(scan_id))
+            fresh_scan = await db.get(BodyScan, scan_id)
+            fresh_job = (
+                await db.execute(select(ScanJob).where(ScanJob.scan_id == scan_id))
+            ).scalar_one_or_none()
+            if fresh_scan is not None:
+                fresh_scan.status = ScanStatus.failed
+            if fresh_job is not None:
+                fresh_job.status = JobStatus.failed
+                fresh_job.error_code = "processing_error"
+            await db.commit()
