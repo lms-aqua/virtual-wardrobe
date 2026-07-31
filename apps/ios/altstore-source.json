@@ -14,12 +14,20 @@
       "iconURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/icon.png",
       "tintColor": "6D5EFC",
       "category": "lifestyle",
-      "version": "1.2.0",
-      "versionDate": "2026-07-31T00:00:00-04:00",
-      "versionDescription": "AR body measuring (beta), a more lifelike customizable avatar, scan from photos, size recommendations, add your own clothes, and outfit compare.",
+      "version": "1.3.0",
+      "versionDate": "2026-07-31T01:00:00-04:00",
+      "versionDescription": "AR magic-mirror try-on, fabric textures, real proportions from a photo, a shop with buy links, favorites, and spin-video export.",
       "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
       "size": 475725,
       "versions": [
+        {
+          "version": "1.3.0",
+          "date": "2026-07-31T01:00:00-04:00",
+          "localizedDescription": "🪞 Virtual Wardrobe 1.3 — try it on you\n\n✨ AR MAGIC MIRROR (beta)\nSee garments overlaid on your own body, live in the camera, with ARKit body tracking.\n\n🧵 FABRIC TEXTURES + BETTER CLOTHES\nDenim, stripes, plaid and knit patterns, plus sleeves — clothes look like fabric now, not flat colour.\n\n📷 REAL PROPORTIONS FROM A PHOTO\nMeasure from a single full-body photo using on-device Vision body-pose + your height.\n\n🛍️ SHOP\nBrowse the catalog with prices, your recommended size, and Buy links.\n\n⭐ FAVORITES\nStar your best outfits; favourites sort to the top.\n\n🎞️ EXPORT A SPIN VIDEO\nRender and share a spinning clip of your dressed avatar.\n\nStill a stylized, measurement-based preview — full body reconstruction and cloth simulation are the road ahead.",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "size": 475725,
+          "minOSVersion": "17.0"
+        },
         {
           "version": "1.2.0",
           "date": "2026-07-31T00:00:00-04:00",

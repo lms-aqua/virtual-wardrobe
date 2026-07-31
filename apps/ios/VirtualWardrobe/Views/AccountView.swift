@@ -56,6 +56,7 @@ struct AccountView: View {
 
     private var dataSection: some View {
         Section {
+            NavigationLink { ShopView() } label: { label("Shop", "bag.fill") }
             NavigationLink { MeasurementsView() } label: { label("Measurements", "ruler.fill") }
             NavigationLink { SavedOutfitsView() } label: { label("Saved outfits", "square.stack.3d.up.fill") }
             NavigationLink { InfoView.howScanningWorks } label: { label("How scanning works", "camera.viewfinder") }

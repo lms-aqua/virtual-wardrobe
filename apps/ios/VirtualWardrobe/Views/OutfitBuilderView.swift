@@ -18,6 +18,8 @@ struct OutfitBuilderView: View {
     @State private var outfitName = "My outfit"
     @State private var toast: String?
     @State private var shareItem: ShareImage?
+    @State private var shareVideo: ShareVideo?
+    @State private var exportingVideo = false
     @State private var showAddGarment = false
 
     private let filters = ["All", "Tops", "Dresses", "Bottoms", "Outerwear", "Shoes"]
@@ -49,6 +51,16 @@ struct OutfitBuilderView: View {
                 }
             }
             if let toast { toastView(toast) }
+            if exportingVideo {
+                ZStack {
+                    Color.black.opacity(0.5).ignoresSafeArea()
+                    VStack(spacing: 12) {
+                        ProgressView().tint(.white)
+                        Text("Rendering spin video…").foregroundStyle(.white)
+                    }
+                    .padding(24).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+                }
+            }
         }
         .navigationTitle("Try On")
         .navigationBarTitleDisplayMode(.inline)
@@ -57,6 +69,7 @@ struct OutfitBuilderView: View {
                 Menu {
                     Button { showAddGarment = true } label: { Label("Add clothing", systemImage: "plus") }
                     Button { share() } label: { Label("Share snapshot", systemImage: "square.and.arrow.up") }
+                    Button { exportVideo() } label: { Label("Share spin video (beta)", systemImage: "video") }
                     if !selected.isEmpty {
                         Button { outfitName = "My outfit"; showNaming = true } label: {
                             Label("Save outfit", systemImage: "square.and.arrow.down")
@@ -68,6 +81,7 @@ struct OutfitBuilderView: View {
         .task { await load() }
         .onChange(of: selected) { rebuild() }
         .sheet(item: $shareItem) { ShareSheet(items: [$0.image]) }
+        .sheet(item: $shareVideo) { ShareSheet(items: [$0.url]) }
         .sheet(isPresented: $showAddGarment) { AddGarmentView { Task { await load() } } }
         .alert("Name your outfit", isPresented: $showNaming) {
             TextField("Outfit name", text: $outfitName)
@@ -211,6 +225,14 @@ struct OutfitBuilderView: View {
     private func share() {
         controller.setPreset(.front)
         shareItem = ShareImage(image: controller.snapshot())
+    }
+
+    private func exportVideo() {
+        exportingVideo = true
+        AvatarVideoExporter.exportSpin(measurements: avatar?.measurements, garments: chosen) { url in
+            exportingVideo = false
+            if let url { shareVideo = ShareVideo(url: url) }
+        }
     }
 
     private func load() async {

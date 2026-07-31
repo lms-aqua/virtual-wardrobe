@@ -65,7 +65,8 @@ enum CustomGarments {
 
     static func asGarment(_ c: CustomGarment) -> GarmentDTO {
         GarmentDTO(id: c.id, brand: "You", name: c.name, category: c.category,
-                   thumbUrl: nil, layeringOrder: layer(for: c.category), sizes: [])
+                   thumbUrl: nil, layeringOrder: layer(for: c.category), sizes: [],
+                   productUrl: nil, priceCents: nil)
     }
 
     static var isCustom: (String) -> Bool { { $0.hasPrefix("custom_") } }

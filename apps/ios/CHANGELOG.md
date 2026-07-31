@@ -4,6 +4,14 @@ The AltStore-visible changelog lives in `altstore-source.json`
 (`apps[0].versions[].localizedDescription`). Bump the `version` there to release;
 CI builds the `.ipa` at that exact version so AltStore detects the update.
 
+## 1.3.0
+- **AR magic mirror (beta)** — garments overlaid on your live body (`MirrorView`).
+- **Fabric textures** — denim/stripes/plaid/knit patterns + sleeves (`PatternTextures`).
+- **Measure from a photo** — Vision body-pose proportions (`PhotoMeasureView`).
+- **Shop** — prices, recommended size, buy links (`ShopView`).
+- **Favorites** — star outfits, sorted first (`Favorites`).
+- **Spin-video export** — share a rotating clip (`AvatarVideoExporter`).
+
 ## 1.2.0
 - **AR body measure (beta)** — ARKit body tracking captures real height/shoulder/
   arm/leg measurements (`ARMeasureView`), PATCHed to the avatar.

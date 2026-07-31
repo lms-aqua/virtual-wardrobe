@@ -15,3 +15,9 @@ struct ShareImage: Identifiable {
     let id = UUID()
     let image: UIImage
 }
+
+/// Identifiable wrapper for sharing an exported video file URL.
+struct ShareVideo: Identifiable {
+    let id = UUID()
+    let url: URL
+}

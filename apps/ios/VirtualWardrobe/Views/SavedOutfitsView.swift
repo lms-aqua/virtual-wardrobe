@@ -5,6 +5,12 @@ struct SavedOutfitsView: View {
     @EnvironmentObject var session: AuthStore
     @State private var outfits: [OutfitDTO] = []
     @State private var loading = true
+    @State private var favTick = 0   // forces re-render on favorite toggle
+
+    private var sorted: [OutfitDTO] {
+        _ = favTick
+        return outfits.sorted { Favorites.contains($0.id) && !Favorites.contains($1.id) }
+    }
 
     var body: some View {
         ZStack {
@@ -15,7 +21,7 @@ struct SavedOutfitsView: View {
                 empty
             } else {
                 List {
-                    ForEach(outfits) { o in
+                    ForEach(sorted) { o in
                         NavigationLink {
                             OutfitBuilderView(initialGarmentIds: Set(o.items.map { $0.garmentId }))
                         } label: {
@@ -26,11 +32,24 @@ struct SavedOutfitsView: View {
                                     Text("\(o.items.count) item\(o.items.count == 1 ? "" : "s")")
                                         .font(.caption).foregroundStyle(.white.opacity(0.6))
                                 }
+                                Spacer()
+                                if Favorites.contains(o.id) {
+                                    Image(systemName: "star.fill").foregroundStyle(.yellow)
+                                }
                             }
                         }
                         .listRowBackground(Color.white.opacity(0.05))
+                        .swipeActions(edge: .leading) {
+                            Button {
+                                Favorites.toggle(o.id); favTick += 1
+                            } label: { Label("Favorite", systemImage: "star") }.tint(.yellow)
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) { remove(o) } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
-                    .onDelete(perform: delete)
                 }
                 .scrollContentBackground(.hidden)
             }
@@ -58,11 +77,8 @@ struct SavedOutfitsView: View {
         loading = false
     }
 
-    private func delete(at offsets: IndexSet) {
-        let toDelete = offsets.map { outfits[$0] }
-        outfits.remove(atOffsets: offsets)
-        Task {
-            for o in toDelete { try? await session.api.deleteOutfit(o.id) }
-        }
+    private func remove(_ o: OutfitDTO) {
+        outfits.removeAll { $0.id == o.id }
+        Task { try? await session.api.deleteOutfit(o.id) }
     }
 }

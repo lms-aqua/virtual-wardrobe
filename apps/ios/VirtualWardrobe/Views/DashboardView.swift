@@ -25,6 +25,8 @@ struct HomeView: View {
     @State private var startScan = false
     @State private var showPhotoImport = false
     @State private var showAR = false
+    @State private var showMirror = false
+    @State private var showPhotoMeasure = false
 
     var body: some View {
         NavigationStack {
@@ -93,6 +95,12 @@ struct HomeView: View {
             .fullScreenCover(isPresented: $showAR, onDismiss: { Task { await load() } }) {
                 ARMeasureView { showAR = false }
             }
+            .fullScreenCover(isPresented: $showMirror) {
+                MirrorView { showMirror = false }
+            }
+            .fullScreenCover(isPresented: $showPhotoMeasure, onDismiss: { Task { await load() } }) {
+                PhotoMeasureView { showPhotoMeasure = false }
+            }
             .task { await load() }
             .refreshable { await load() }
         }
@@ -123,7 +131,9 @@ struct HomeView: View {
         Menu {
             Button { startScan = true } label: { Label("Camera 360° scan", systemImage: "camera.viewfinder") }
             Button { showPhotoImport = true } label: { Label("Import photos", systemImage: "photo.on.rectangle.angled") }
+            Button { showPhotoMeasure = true } label: { Label("Measure from a photo", systemImage: "ruler") }
             Button { showAR = true } label: { Label("AR body measure (beta)", systemImage: "arkit") }
+            Button { showMirror = true } label: { Label("AR magic mirror (beta)", systemImage: "sparkles.tv") }
         } label: {
             Label(avatars.isEmpty ? "Start body scan" : "New scan / measure",
                   systemImage: "camera.viewfinder")

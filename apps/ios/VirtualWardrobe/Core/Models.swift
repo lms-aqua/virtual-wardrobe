@@ -124,9 +124,17 @@ struct GarmentDTO: Codable, Identifiable {
     let thumbUrl: String?
     let layeringOrder: Int
     let sizes: [GarmentSizeDTO]
+    let productUrl: String?
+    let priceCents: Int?
     enum CodingKeys: String, CodingKey {
         case id; case brand; case name; case category
         case thumbUrl = "thumb_url"; case layeringOrder = "layering_order"; case sizes
+        case productUrl = "product_url"; case priceCents = "price_cents"
+    }
+
+    var priceText: String? {
+        guard let priceCents else { return nil }
+        return String(format: "$%.2f", Double(priceCents) / 100)
     }
 }
 

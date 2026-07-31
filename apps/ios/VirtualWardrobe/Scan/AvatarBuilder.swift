@@ -140,6 +140,14 @@ enum AvatarBuilder {
         let ap = GarmentAppearance.of(g)
         let color = UIColor(ap.color)
         let clothMat = mat(color, rough: 0.7)
+        // Apply a tiled fabric pattern where appropriate.
+        let pattern = PatternTextures.pattern(for: g)
+        if let tex = PatternTextures.image(pattern, color: color) {
+            clothMat.diffuse.contents = tex
+            clothMat.diffuse.wrapS = .repeat
+            clothMat.diffuse.wrapT = .repeat
+            clothMat.diffuse.contentsTransform = SCNMatrix4MakeScale(4, 4, 1)
+        }
         let name = g.name.lowercased()
 
         func add(_ geo: SCNGeometry, _ pos: SCNVector3, euler: SCNVector3 = SCNVector3Zero) {
@@ -155,6 +163,10 @@ enum AvatarBuilder {
             add(SCNCone(topRadius: CGFloat(d.chestR * 1.14), bottomRadius: CGFloat(d.waistR * 1.16),
                         height: CGFloat(hh)),
                 SCNVector3(0, shoulderY - hh / 2, 0))
+            for side: Float in [-1, 1] {   // short sleeves
+                add(SCNCapsule(capRadius: CGFloat(d.chestR * 0.30), height: CGFloat(d.armLen * 0.32)),
+                    SCNVector3(side * (d.shoulderW / 2), shoulderY - d.armLen * 0.16, 0))
+            }
         case .outerwear:
             let hh = d.torsoLen * 0.9
             add(SCNCone(topRadius: CGFloat(d.chestR * 1.22), bottomRadius: CGFloat(d.hipR * 1.2),
