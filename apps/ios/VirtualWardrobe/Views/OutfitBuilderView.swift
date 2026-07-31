@@ -246,13 +246,29 @@ struct OutfitBuilderView: View {
     }
 
     private func save() async {
-        saving = true; defer { saving = false }
+        // Re-entrancy guard: `saving` was tracked but never actually consulted,
+        // so a double tap fired two creates and produced duplicate outfits.
+        guard !saving else { return }
+        saving = true
+        defer { saving = false }
+
         // Custom (local) garments can't be part of a synced outfit.
         let items = chosen.filter { !CustomGarments.isCustom($0.id) }.map {
             OutfitItemIn(garmentId: $0.id, sizeLabel: "M", layerIndex: $0.layeringOrder)
         }
-        _ = try? await session.api.createOutfit(name: outfitName, avatarId: avatar?.id, items: items)
-        await flash("Outfit saved ✓")
+
+        do {
+            // The result and the error were both discarded here, then a success
+            // toast was shown unconditionally — a failed save reported "saved".
+            _ = try await session.api.createOutfit(
+                name: outfitName, avatarId: avatar?.id, items: items
+            )
+            DS.Haptic.success()
+            await flash("Outfit saved ✓")
+        } catch {
+            DS.Haptic.warning()
+            await flash("Couldn’t save outfit — try again")
+        }
     }
 
     private func flash(_ text: String) async {

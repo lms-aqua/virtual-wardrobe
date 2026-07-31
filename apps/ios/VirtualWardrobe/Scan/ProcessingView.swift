@@ -56,8 +56,11 @@ struct ProcessingView: View {
         VStack(spacing: 14) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 40)).foregroundStyle(.orange)
-            Text("Scan didn't pass quality checks")
+            Text(errorCode == "network_unreachable"
+                 ? "Couldn’t Reach the Server"
+                 : "Scan Didn’t Pass Quality Checks")
                 .font(.title3.bold()).foregroundStyle(DS.Color.primaryText)
+                .multilineTextAlignment(.center)
             Text(friendlyError())
                 .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)
             Button("Back") { coordinator.onFinish() }
@@ -71,15 +74,28 @@ struct ProcessingView: View {
             return "Make sure your whole body is in frame with good lighting, then try again."
         case let c? where c.contains("invalid_image"):
             return "One of the photos couldn't be read. Please retake the scan."
+        case "network_unreachable":
+            return "We couldn't reach the server. Your scan is safe — check your connection and try again."
         default:
             return "Please try the scan again."
         }
     }
 
+    /// Maximum consecutive request failures before giving up. Without a cap the
+    /// loop retried forever on a permanent error (expired token, deleted job),
+    /// and the back button is hidden here, so the user was trapped on a spinner
+    /// with the app hammering the API every 1.5s.
+    private static let maxConsecutiveFailures = 5
+
     private func poll() async {
+        var failures = 0
+
         while polling {
+            if Task.isCancelled { return }
+
             do {
                 let job = try await session.api.job(jobId)
+                failures = 0
                 status = job.status
                 errorCode = job.errorCode
                 if job.status == "completed" {
@@ -89,9 +105,27 @@ struct ProcessingView: View {
                     polling = false
                 }
             } catch {
-                // transient; keep polling a few cycles
+                failures += 1
+                if failures >= Self.maxConsecutiveFailures {
+                    // Terminal state, so the screen stops spinning and offers a
+                    // way out instead of retrying indefinitely.
+                    status = "failed"
+                    errorCode = "network_unreachable"
+                    polling = false
+                }
             }
-            if polling { try? await Task.sleep(nanoseconds: 1_500_000_000) }
+
+            guard polling else { break }
+
+            // `try?` here swallowed CancellationError: when .task cancelled on
+            // disappear, sleep threw immediately, the error was discarded and
+            // the loop spun with no delay — a tight CPU loop still calling the
+            // API after the user had navigated away.
+            do {
+                try await Task.sleep(nanoseconds: 1_500_000_000)
+            } catch {
+                return
+            }
         }
     }
 }
