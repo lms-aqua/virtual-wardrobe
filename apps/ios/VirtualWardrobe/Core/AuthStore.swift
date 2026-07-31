@@ -15,6 +15,19 @@ final class AuthStore: ObservableObject {
     func bootstrap() async {
         guard token != nil else { return }
         await refreshUser()
+        await pullPreferences()
+    }
+
+    /// Pull account-synced preferences and apply them locally.
+    func pullPreferences() async {
+        guard user != nil else { return }
+        if let p = try? await api.getPreferences() { PrefsSync.apply(p) }
+    }
+
+    /// Push current local preferences to the account (fire-and-forget).
+    func pushPreferences() {
+        guard user != nil else { return }
+        Task { try? await api.putPreferences(PrefsSync.snapshot()) }
     }
 
     func refreshUser() async {
@@ -47,6 +60,7 @@ final class AuthStore: ObservableObject {
             let auth = try await api.verifyMagicLink(token: magicToken)
             Keychain.set(auth.accessToken, for: tokenKey)
             await refreshUser()
+            await pullPreferences()
             return user != nil
         } catch {
             errorMessage = error.localizedDescription

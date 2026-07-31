@@ -161,6 +161,14 @@ struct OutfitDTO: Codable, Identifiable {
     let items: [OutfitItemDTO]
 }
 
+/// Client preferences synced to the account via /me/preferences.
+struct SyncedPrefs: Codable {
+    var units: String?
+    var skinIndex: Int?
+    var build: Double?
+    var favorites: [String]?
+}
+
 enum ScanView: String, CaseIterable, Identifiable {
     case front, left, back, right
     var id: String { rawValue }

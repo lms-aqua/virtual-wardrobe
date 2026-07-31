@@ -61,5 +61,6 @@ struct CustomizeView: View {
 
     private func rebuild() {
         controller.update(measurements: measurements, garments: [])
+        session.pushPreferences()
     }
 }

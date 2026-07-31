@@ -49,6 +49,7 @@ struct AccountView: View {
                 ForEach(Units.System.allCases) { Text($0.label).tag($0.rawValue) }
             } label: { label("Units", "ruler") }
             .tint(.white)
+            .onChange(of: unitsRaw) { session.pushPreferences() }
             NavigationLink { SettingsView() } label: { label("Server", "network") }
         } header: { header("Preferences") }
         .listRowBackground(Color.white.opacity(0.05))

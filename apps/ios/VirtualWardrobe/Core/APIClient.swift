@@ -57,6 +57,17 @@ struct APIClient {
         try decode(await request("POST", "auth/magic-link/verify", json: ["token": token]))
     }
     func me() async throws -> UserDTO { try decode(await request("GET", "me")) }
+
+    func getPreferences() async throws -> SyncedPrefs {
+        struct Wrap: Decodable { let data: SyncedPrefs }
+        let w: Wrap = try decode(await request("GET", "me/preferences"))
+        return w.data
+    }
+    func putPreferences(_ p: SyncedPrefs) async throws {
+        let d = try JSONEncoder().encode(p)
+        let obj = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] ?? [:]
+        _ = try await request("PUT", "me/preferences", json: ["data": obj])
+    }
     func deleteAccount() async throws {
         _ = try await request("POST", "account/deletion-request", json: ["scope": "full_account"])
     }

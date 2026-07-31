@@ -4,6 +4,12 @@ The AltStore-visible changelog lives in `altstore-source.json`
 (`apps[0].versions[].localizedDescription`). Bump the `version` there to release;
 CI builds the `.ipa` at that exact version so AltStore detects the update.
 
+## 1.4.0
+- **Cross-device sync** — units, avatar skin/build customization, and favorites
+  sync to the account via `/me/preferences` (`PrefsSync`, `AuthStore`).
+- **Shop** now shows real prices + Buy links (backend catalog populated).
+- Avatar is now a real server-generated 3D mesh; scans process in the background.
+
 ## 1.3.0
 - **AR magic mirror (beta)** — garments overlaid on your live body (`MirrorView`).
 - **Fabric textures** — denim/stripes/plaid/knit patterns + sleeves (`PatternTextures`).

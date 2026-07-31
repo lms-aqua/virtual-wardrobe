@@ -41,7 +41,7 @@ struct SavedOutfitsView: View {
                         .listRowBackground(Color.white.opacity(0.05))
                         .swipeActions(edge: .leading) {
                             Button {
-                                Favorites.toggle(o.id); favTick += 1
+                                Favorites.toggle(o.id); favTick += 1; session.pushPreferences()
                             } label: { Label("Favorite", systemImage: "star") }.tint(.yellow)
                         }
                         .swipeActions(edge: .trailing) {
