@@ -57,3 +57,28 @@ jobs:
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
+
+  containers:
+    name: Containers (build + compose validate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Compose is validated against .env.example rather than a real .env, so
+      # this also proves the stack does not depend on uncommitted local files.
+      - name: Validate Compose config
+        run: |
+          docker compose -f infrastructure/docker-compose.yml \
+            --env-file .env.example config --quiet
+          echo "compose config valid"
+
+      # The worker shares the api build context, so building the api image
+      # covers both services.
+      - name: Build API/worker image
+        run: docker build -t vw-api:ci apps/api
+
+      - name: Build web image
+        run: docker build -t vw-web:ci apps/web
+
+      - name: Image sizes
+        run: docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep '^vw-'

@@ -156,7 +156,11 @@ cell), `Views/GarmentDetailView.swift` (new editorial detail); wired as a new
   Type via system text styles, `.isButton`/`.isHeader` traits, no color-only status.
 - **Performance:** `LazyVGrid` + adaptive columns, `AsyncImage` (async decode), filtering
   computed once per state (not per cell).
-- **Status:** Implemented + statically reviewed. **CI pending** → will record result.
+- **Status:** ✅ **CI verified** — iOS build passed (run 30616108650) on first compile.
+  Not yet manually verified in a running app (no simulator here).
+- **Next production feature:** Outfits (Phase 3) — rebuild the outfit list + detail on the
+  real user outfits, then Today (Phase 4). Planner + own-clothes-photos + wear-tracking
+  remain backend work (not faked).
 
 ## 7. Status / build
 

@@ -34,3 +34,8 @@ infrastructure/data/
 *.log
 coverage/
 .pytest_cache/
+
+# Test + build artifacts that must never be committed
+apps/api/_vw_test.db
+apps/api/*.db
+apps/web/tsconfig.tsbuildinfo
