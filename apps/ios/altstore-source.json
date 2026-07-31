@@ -18,14 +18,14 @@
       "versionDate": "2026-07-31T16:10:00-04:00",
       "versionDescription": "A bug-hunt release: fixes a cross-account avatar reference, processing that retried forever, saves that reported false success, duplicate outfits from double taps, and sign-outs caused by brief connection drops.",
       "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v3.0.0/VirtualWardrobe-unsigned.ipa",
-      "size": 979275,
+      "size": 980605,
       "versions": [
         {
           "version": "3.0.0",
           "date": "2026-07-31T16:10:00-04:00",
           "localizedDescription": "🛠️ Virtual Wardrobe 3.0 — a bug-hunt release\n\n🔒 SECURITY\nFixed a flaw where an outfit could be created referencing another account's avatar. The server now verifies you own anything you point at.\n\n🔄 NO MORE GETTING STUCK\nAvatar processing used to retry forever if the server became unreachable — on a screen with no back button. It now gives up cleanly and tells you what happened. Leaving that screen also used to leave a loop running in the background hammering the server; it stops properly now.\n\n💾 SAVES THAT TELL THE TRUTH\nSaving an outfit reported \"saved\" even when it failed. It now says when it didn't work. Double-tapping Save no longer creates two copies of the same outfit.\n\n📶 STAYS SIGNED IN\nA brief connection drop signed you out and threw you back to the login screen. Only a genuinely expired session does that now.\n\n💬 BETTER ERRORS\nRaw server messages no longer leak into the app; you get plain language instead.\n\nThe avatar is still a stylized, measurement-based preview.",
           "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v3.0.0/VirtualWardrobe-unsigned.ipa",
-          "size": 979275,
+          "size": 980605,
           "minOSVersion": "17.0"
         },
         {
