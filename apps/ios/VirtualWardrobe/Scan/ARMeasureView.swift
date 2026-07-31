@@ -35,7 +35,7 @@ final class ARMeasureController: NSObject, ObservableObject, ARSessionDelegate {
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
         guard let body = anchors.compactMap({ $0 as? ARBodyAnchor }).first else { return }
         let sk = body.skeleton
-        let scale = body.estimatedScaleFactor
+        let scale = Float(body.estimatedScaleFactor)
         func cm(_ v: Float) -> Double { Double(v * scale * 100) }
 
         guard let head = pos(sk, .head), let foot = pos(sk, .leftFoot) else { return }
