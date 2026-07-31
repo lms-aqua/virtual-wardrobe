@@ -183,9 +183,17 @@ jobs:
             gh release create "v$VERSION" $ASSETS --title "Virtual Wardrobe $VERSION" --notes "$NOTES"
           fi
 
-          # 2) Moving "ios-latest" pointer (recreated each build) for a stable
-          #    URL. Only permanent releases are protected; this one is meant to
-          #    move, and deleting it never touches a v<version> release.
-          gh release delete ios-latest --yes --cleanup-tag 2>/dev/null || true
-          gh release create ios-latest $ASSETS --title "Latest ($VERSION)" --notes "$NOTES Permanent copy: v$VERSION."
-          echo "Released v$VERSION (kept) + ios-latest."
+          # 2) Moving "ios-latest" pointer. Updated IN PLACE — it used to be
+          #    deleted and recreated every build, which destroyed and reissued
+          #    every asset URL under it. AltStore reads the icon and manifest
+          #    from here, so that churn made a stable source look like it kept
+          #    changing. Clobbering the assets keeps the tag and URLs fixed.
+          if gh release view ios-latest >/dev/null 2>&1; then
+            gh release upload ios-latest $ASSETS --clobber
+            gh release edit ios-latest --title "Latest ($VERSION)" \
+              --notes "$NOTES Permanent copy: v$VERSION."
+          else
+            gh release create ios-latest $ASSETS --title "Latest ($VERSION)" \
+              --notes "$NOTES Permanent copy: v$VERSION."
+          fi
+          echo "Released v$VERSION (kept) + ios-latest (updated in place)."

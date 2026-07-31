@@ -11,7 +11,7 @@
       "developerName": "Lost Media Studios",
       "subtitle": "Private virtual try-on wardrobe",
       "localizedDescription": "Build a personalized 3D avatar from a guided 360° body scan and try on digital clothing. Privacy-first: adults-only consent, private storage, no face recognition, one-tap delete.",
-      "iconURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/icon.png",
+      "iconURL": "https://raw.githubusercontent.com/lms-aqua/virtual-wardrobe/main/apps/ios/icon.png",
       "tintColor": "6D5EFC",
       "category": "lifestyle",
       "version": "2.5.0",

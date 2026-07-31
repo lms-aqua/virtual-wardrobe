@@ -113,7 +113,7 @@ linked Apple ID / AppDB certificate, then install. Trust the profile under
 3. **Recommended — add the source feed for one-tap updates.** In AltStore →
    **Browse → Sources → +**, add:
    ```
-   https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/altstore-source.json
+   https://raw.githubusercontent.com/lms-aqua/virtual-wardrobe/main/apps/ios/altstore-source.json
    ```
    Each CI build bumps the version and refreshes this manifest, so AltStore
    shows "Update" automatically. (Repo is public, so the feed + `.ipa` are
