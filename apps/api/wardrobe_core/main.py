@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
@@ -100,8 +100,14 @@ def create_app() -> FastAPI:
         return {"status": "ok", "version": __version__}
 
     @app.get("/health/ready", tags=["health"])
-    async def ready() -> dict[str, object]:
-        """Readiness: verify the database is reachable."""
+    async def ready(response: Response) -> dict[str, object]:
+        """Readiness: verify the database is reachable.
+
+        Returns 503 when a dependency is down. This previously answered 200
+        with a "degraded" body, which every orchestrator and load balancer
+        reads as healthy — so an instance that had lost its database kept
+        receiving traffic.
+        """
         checks: dict[str, str] = {}
         healthy = True
         try:
@@ -113,6 +119,9 @@ def create_app() -> FastAPI:
             checks["database"] = "unavailable"
             healthy = False
             log.warning("readiness.db_failed", error=str(exc))
+
+        if not healthy:
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"status": "ok" if healthy else "degraded", "checks": checks}
 
     return app
