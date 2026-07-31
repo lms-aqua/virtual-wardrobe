@@ -26,28 +26,28 @@ struct CustomizeView: View {
 
     private var controls: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Skin tone").font(.subheadline.bold()).foregroundStyle(.white)
+            Text("Skin tone").font(.subheadline.bold()).foregroundStyle(DS.Color.primaryText)
             HStack(spacing: 12) {
                 ForEach(Array(Customization.skinTones.enumerated()), id: \.offset) { i, c in
                     Circle().fill(Color(c)).frame(width: 38, height: 38)
-                        .overlay(Circle().stroke(skinIndex == i ? .white : .clear, lineWidth: 3))
+                        .overlay(Circle().stroke(skinIndex == i ? DS.Color.onAccent : .clear, lineWidth: 3))
                         .onTapGesture {
                             skinIndex = i; Customization.skinIndex = i; rebuild()
                         }
                 }
             }
             VStack(alignment: .leading, spacing: 6) {
-                Text("Body build").font(.subheadline.bold()).foregroundStyle(.white)
+                Text("Body build").font(.subheadline.bold()).foregroundStyle(DS.Color.primaryText)
                 HStack {
-                    Text("Slim").font(.caption).foregroundStyle(.white.opacity(0.6))
+                    Text("Slim").font(.caption).foregroundStyle(DS.Color.secondaryText)
                     Slider(value: $build, in: 0.8...1.2)
                         .tint(Theme.accent)
                         .onChange(of: build) { Customization.build = build; rebuild() }
-                    Text("Full").font(.caption).foregroundStyle(.white.opacity(0.6))
+                    Text("Full").font(.caption).foregroundStyle(DS.Color.secondaryText)
                 }
             }
             Text("A stylized preview shaped by your measurements — not a photo reconstruction.")
-                .font(.caption2).foregroundStyle(.white.opacity(0.5))
+                .font(.caption2).foregroundStyle(DS.Color.secondaryText)
         }
         .padding(20)
         .background(.ultraThinMaterial)

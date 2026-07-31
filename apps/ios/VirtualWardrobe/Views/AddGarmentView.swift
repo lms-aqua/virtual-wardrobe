@@ -33,7 +33,7 @@ struct AddGarmentView: View {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 12) {
                             ForEach(CustomGarments.palette, id: \.self) { hex in
                                 Circle().fill(Color(hex: hex)).frame(height: 40)
-                                    .overlay(Circle().stroke(colorHex == hex ? .white : .clear, lineWidth: 3))
+                                    .overlay(Circle().stroke(colorHex == hex ? DS.Color.onAccent : .clear, lineWidth: 3))
                                     .onTapGesture { colorHex = hex }
                             }
                         }
@@ -54,6 +54,5 @@ struct AddGarmentView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
     }
 }

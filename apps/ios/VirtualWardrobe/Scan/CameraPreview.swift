@@ -45,7 +45,7 @@ struct SilhouetteOverlay: View {
                 Image(systemName: "figure.stand")
                     .resizable().scaledToFit()
                     .frame(height: h * 0.7)
-                    .foregroundStyle(.white.opacity(0.12))
+                    .foregroundStyle(DS.Color.tertiaryText)
             }
         }
         .allowsHitTesting(false)

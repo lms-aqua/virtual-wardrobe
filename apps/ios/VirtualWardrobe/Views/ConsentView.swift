@@ -15,7 +15,7 @@ struct ConsentView: View {
                     Image(systemName: "hand.raised.fill")
                         .font(.system(size: 40)).foregroundStyle(Theme.accent)
                     Text("Before you scan")
-                        .font(.largeTitle.bold()).foregroundStyle(.white)
+                        .font(.largeTitle.bold()).foregroundStyle(DS.Color.primaryText)
 
                     VStack(alignment: .leading, spacing: 12) {
                         bullet("Only scan your own body.", "person.fill.checkmark")
@@ -28,14 +28,14 @@ struct ConsentView: View {
 
                     Toggle(isOn: $agreed) {
                         Text("I consent to a body scan of myself under these terms.")
-                            .foregroundStyle(.white.opacity(0.9))
+                            .foregroundStyle(DS.Color.primaryText)
                     }
                     .tint(Theme.accent)
 
                     Button {
                         Task { await grant() }
                     } label: {
-                        if granting { ProgressView().tint(.white) }
+                        if granting { ProgressView().tint(DS.Color.accent) }
                         else { Text("I consent — continue") }
                     }
                     .buttonStyle(PrimaryButtonStyle(enabled: agreed && !granting))
@@ -54,7 +54,7 @@ struct ConsentView: View {
     private func bullet(_ text: String, _ symbol: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: symbol).foregroundStyle(Theme.accent).frame(width: 24)
-            Text(text).foregroundStyle(.white.opacity(0.85))
+            Text(text).foregroundStyle(DS.Color.primaryText)
         }
     }
 

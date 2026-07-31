@@ -90,14 +90,14 @@ struct ARMeasureView: View {
         VStack {
             HStack {
                 Spacer()
-                Button("Close") { onFinish() }.foregroundStyle(.white)
+                Button("Close") { onFinish() }.foregroundStyle(DS.Color.primaryText)
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(.ultraThinMaterial, in: Capsule()).padding()
             }
             Spacer()
             VStack(spacing: 12) {
                 if ar.bodyDetected {
-                    Text("Body detected").font(.headline).foregroundStyle(.white)
+                    Text("Body detected").font(.headline).foregroundStyle(DS.Color.primaryText)
                     HStack(spacing: 18) {
                         stat("Height", ar.heightCm)
                         stat("Shoulders", ar.shoulderCm)
@@ -105,18 +105,18 @@ struct ARMeasureView: View {
                         stat("Inseam", ar.inseamCm)
                     }
                     Text("Stand ~2–3 m away, full body in frame, for best accuracy.")
-                        .font(.caption2).foregroundStyle(.white.opacity(0.6))
+                        .font(.caption2).foregroundStyle(DS.Color.secondaryText)
                     Button {
                         Task { await save() }
                     } label: {
-                        if saving { ProgressView().tint(.white) }
+                        if saving { ProgressView().tint(DS.Color.accent) }
                         else { Text(saved ? "Saved ✓" : "Use these measurements") }
                     }
                     .buttonStyle(PrimaryButtonStyle(enabled: !saving && avatarId != nil))
                     .disabled(saving || avatarId == nil)
                 } else {
                     Text("Point the camera at a person, full body in frame…")
-                        .font(.headline).foregroundStyle(.white).multilineTextAlignment(.center)
+                        .font(.headline).foregroundStyle(DS.Color.primaryText).multilineTextAlignment(.center)
                 }
             }
             .padding(20)
@@ -127,8 +127,8 @@ struct ARMeasureView: View {
 
     private func stat(_ label: String, _ cm: Double) -> some View {
         VStack {
-            Text(cm > 0 ? Units.value(cm: cm) : "—").font(.headline).foregroundStyle(.white)
-            Text(label).font(.caption2).foregroundStyle(.white.opacity(0.6))
+            Text(cm > 0 ? Units.value(cm: cm) : "—").font(.headline).foregroundStyle(DS.Color.primaryText)
+            Text(label).font(.caption2).foregroundStyle(DS.Color.secondaryText)
         }
     }
 
@@ -136,9 +136,9 @@ struct ARMeasureView: View {
         VStack(spacing: 14) {
             Image(systemName: "arkit").font(.system(size: 44)).foregroundStyle(Theme.accent)
             Text("AR body measuring isn't supported on this device")
-                .font(.title3.bold()).foregroundStyle(.white).multilineTextAlignment(.center)
+                .font(.title3.bold()).foregroundStyle(DS.Color.primaryText).multilineTextAlignment(.center)
             Text("It needs an A12 chip or newer. You can still edit measurements by hand.")
-                .multilineTextAlignment(.center).foregroundStyle(.white.opacity(0.7))
+                .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)
             Button("Close") { onFinish() }.buttonStyle(PrimaryButtonStyle())
         }
         .padding(28)

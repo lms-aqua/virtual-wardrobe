@@ -11,15 +11,15 @@ struct SettingsView: View {
                 Theme.backgroundGradient.ignoresSafeArea()
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Server")
-                        .font(.headline).foregroundStyle(.white)
+                        .font(.headline).foregroundStyle(DS.Color.primaryText)
                     Text("The domain this app connects to. Use your deployed API, or http://localhost:8000 for a local backend in the Simulator.")
-                        .font(.footnote).foregroundStyle(.white.opacity(0.7))
+                        .font(.footnote).foregroundStyle(DS.Color.secondaryText)
                     TextField("https://api.example.com", text: $baseURL)
                         .autocapitalization(.none)
                         .keyboardType(.URL)
                         .padding(14)
-                        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
-                        .foregroundStyle(.white)
+                        .background(DS.Color.raised, in: RoundedRectangle(cornerRadius: 12))
+                        .foregroundStyle(DS.Color.primaryText)
                     Button("Save") {
                         AppConfig.setBaseURL(baseURL.trimmingCharacters(in: .whitespaces))
                         dismiss()
@@ -33,6 +33,5 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
         }
-        .preferredColorScheme(.dark)
     }
 }

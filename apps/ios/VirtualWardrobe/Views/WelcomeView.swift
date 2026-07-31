@@ -20,7 +20,7 @@ struct WelcomeView: View {
                 signInCard
                 Text("Avatar generation uses a clearly-labeled mock in this build. No claims of tailoring- or medical-grade accuracy.")
                     .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(DS.Color.secondaryText)
             }
             .padding(20)
         }
@@ -36,7 +36,7 @@ struct WelcomeView: View {
         HStack {
             Spacer()
             Button { showSettings = true } label: {
-                Image(systemName: "gearshape").foregroundStyle(.white.opacity(0.7))
+                Image(systemName: "gearshape").foregroundStyle(DS.Color.secondaryText)
             }
             .padding(.trailing, 20).padding(.top, 8)
         }
@@ -51,9 +51,9 @@ struct WelcomeView: View {
                 .kerning(2)
             Text("Your body.\nYour avatar.\nYour privacy.")
                 .font(.system(size: 40, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(DS.Color.primaryText)
             Text("Build a personalized 3D avatar from a guided body scan, then try on digital clothing — private by design.")
-                .foregroundStyle(.white.opacity(0.75))
+                .foregroundStyle(DS.Color.secondaryText)
         }
         .padding(.top, 8)
     }
@@ -61,11 +61,11 @@ struct WelcomeView: View {
     private var privacyCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Privacy you can verify", systemImage: "lock.shield.fill")
-                .font(.headline).foregroundStyle(.white)
+                .font(.headline).foregroundStyle(DS.Color.primaryText)
             ForEach(Self.privacyPoints, id: \.self) { point in
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accent)
-                    Text(point).foregroundStyle(.white.opacity(0.85))
+                    Text(point).foregroundStyle(DS.Color.primaryText)
                 }
             }
         }
@@ -74,29 +74,29 @@ struct WelcomeView: View {
 
     private var signInCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Get started").font(.headline).foregroundStyle(.white)
+            Text("Get started").font(.headline).foregroundStyle(DS.Color.primaryText)
             TextField("Email", text: $email)
                 .textContentType(.emailAddress)
                 .keyboardType(.emailAddress)
                 .autocapitalization(.none)
                 .padding(14)
-                .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
-                .foregroundStyle(.white)
+                .background(DS.Color.raised, in: RoundedRectangle(cornerRadius: 12))
+                .foregroundStyle(DS.Color.primaryText)
 
             Toggle(isOn: $isAdult) {
                 Text("I confirm I am 18 or older and consent to creating an account.")
-                    .font(.footnote).foregroundStyle(.white.opacity(0.8))
+                    .font(.footnote).foregroundStyle(DS.Color.secondaryText)
             }
             .tint(Theme.accent)
 
             if showTokenEntry {
                 Text("We emailed you a sign-in code. Paste it here:")
-                    .font(.footnote).foregroundStyle(.white.opacity(0.7))
+                    .font(.footnote).foregroundStyle(DS.Color.secondaryText)
                 TextField("Sign-in token", text: $pastedToken)
                     .autocapitalization(.none)
                     .padding(14)
-                    .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
-                    .foregroundStyle(.white)
+                    .background(DS.Color.raised, in: RoundedRectangle(cornerRadius: 12))
+                    .foregroundStyle(DS.Color.primaryText)
                 Button("Verify & continue") {
                     Task { _ = await session.verify(token: pastedToken) }
                 }
@@ -108,7 +108,7 @@ struct WelcomeView: View {
                         if ok && !session.isAuthenticated { showTokenEntry = true }
                     }
                 } label: {
-                    if session.isLoading { ProgressView().tint(.white) }
+                    if session.isLoading { ProgressView().tint(DS.Color.accent) }
                     else { Text("Continue with email") }
                 }
                 .buttonStyle(PrimaryButtonStyle(enabled: canSend))

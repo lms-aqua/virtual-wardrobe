@@ -11,7 +11,7 @@ struct ShopView: View {
         ZStack {
             Theme.backgroundGradient.ignoresSafeArea()
             if loading {
-                ProgressView().tint(.white)
+                ProgressView().tint(DS.Color.accent)
             } else {
                 ScrollView {
                     VStack(spacing: 12) {
@@ -30,10 +30,10 @@ struct ShopView: View {
         HStack(spacing: 14) {
             RoundedRectangle(cornerRadius: 12).fill(GarmentAppearance.of(g).color)
                 .frame(width: 56, height: 56)
-                .overlay(Image(systemName: "tshirt.fill").foregroundStyle(.white.opacity(0.85)))
+                .overlay(Image(systemName: "tshirt.fill").foregroundStyle(DS.Color.primaryText))
             VStack(alignment: .leading, spacing: 3) {
-                Text(g.name).font(.subheadline.bold()).foregroundStyle(.white)
-                Text(g.brand).font(.caption).foregroundStyle(.white.opacity(0.6))
+                Text(g.name).font(.subheadline.bold()).foregroundStyle(DS.Color.primaryText)
+                Text(g.brand).font(.caption).foregroundStyle(DS.Color.secondaryText)
                 if let rec = SizeRecommender.recommend(garment: g, measurements: measurements) {
                     Text("Your size: \(rec.label) · \(rec.note)")
                         .font(.caption2).foregroundStyle(Theme.accent2)
@@ -42,13 +42,13 @@ struct ShopView: View {
             Spacer()
             VStack(alignment: .trailing, spacing: 6) {
                 if let price = g.priceText {
-                    Text(price).font(.subheadline.bold()).foregroundStyle(.white)
+                    Text(price).font(.subheadline.bold()).foregroundStyle(DS.Color.primaryText)
                 }
                 if let urlStr = g.productUrl, let url = URL(string: urlStr) {
                     Link(destination: url) {
-                        Text("Buy").font(.caption.bold()).foregroundStyle(.white)
+                        Text("Buy").font(.caption.bold()).foregroundStyle(DS.Color.onAccent)
                             .padding(.horizontal, 14).padding(.vertical, 6)
-                            .background(Theme.accent, in: Capsule())
+                            .background(DS.Color.accent, in: Capsule())
                     }
                 }
             }

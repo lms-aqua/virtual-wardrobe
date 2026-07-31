@@ -16,7 +16,7 @@ struct SavedOutfitsView: View {
         ZStack {
             Theme.backgroundGradient.ignoresSafeArea()
             if loading {
-                ProgressView().tint(.white)
+                ProgressView().tint(DS.Color.accent)
             } else if outfits.isEmpty {
                 empty
             } else {
@@ -28,9 +28,9 @@ struct SavedOutfitsView: View {
                             HStack {
                                 Image(systemName: "square.stack.3d.up.fill").foregroundStyle(Theme.accent)
                                 VStack(alignment: .leading) {
-                                    Text(o.name).foregroundStyle(.white)
+                                    Text(o.name).foregroundStyle(DS.Color.primaryText)
                                     Text("\(o.items.count) item\(o.items.count == 1 ? "" : "s")")
-                                        .font(.caption).foregroundStyle(.white.opacity(0.6))
+                                        .font(.caption).foregroundStyle(DS.Color.secondaryText)
                                 }
                                 Spacer()
                                 if Favorites.contains(o.id) {
@@ -38,7 +38,7 @@ struct SavedOutfitsView: View {
                                 }
                             }
                         }
-                        .listRowBackground(Color.white.opacity(0.05))
+                        .listRowBackground(DS.Color.raisedGrouped)
                         .swipeActions(edge: .leading) {
                             Button {
                                 Favorites.toggle(o.id); favTick += 1; session.pushPreferences()
@@ -64,9 +64,9 @@ struct SavedOutfitsView: View {
         VStack(spacing: 12) {
             Image(systemName: "square.stack.3d.up.slash").font(.system(size: 44))
                 .foregroundStyle(Theme.accent)
-            Text("No saved outfits yet").font(.headline).foregroundStyle(.white)
+            Text("No saved outfits yet").font(.headline).foregroundStyle(DS.Color.primaryText)
             Text("Build a look in Try On and tap Save.")
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(DS.Color.secondaryText)
         }
         .padding(30)
     }

@@ -17,17 +17,17 @@ struct OutfitCompareView: View {
         ZStack {
             Theme.backgroundGradient.ignoresSafeArea()
             if loading {
-                ProgressView().tint(.white)
+                ProgressView().tint(DS.Color.accent)
             } else if outfits.count < 2 {
                 VStack(spacing: 10) {
                     Image(systemName: "square.on.square").font(.system(size: 40)).foregroundStyle(Theme.accent)
                     Text("Save at least two outfits to compare them.")
-                        .multilineTextAlignment(.center).foregroundStyle(.white.opacity(0.7))
+                        .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)
                 }.padding()
             } else {
                 HStack(spacing: 0) {
                     pane(title: "A", selection: $selA, controller: left)
-                    Divider().overlay(Color.white.opacity(0.2))
+                    Divider().overlay(DS.Color.separator)
                     pane(title: "B", selection: $selB, controller: right)
                 }
             }
@@ -47,8 +47,8 @@ struct OutfitCompareView: View {
             } label: {
                 HStack {
                     Text(selection.wrappedValue?.name ?? "Outfit \(title)")
-                        .font(.subheadline.bold()).foregroundStyle(.white)
-                    Image(systemName: "chevron.down").font(.caption).foregroundStyle(.white.opacity(0.7))
+                        .font(.subheadline.bold()).foregroundStyle(DS.Color.primaryText)
+                    Image(systemName: "chevron.down").font(.caption).foregroundStyle(DS.Color.secondaryText)
                 }
                 .padding(.vertical, 8)
             }

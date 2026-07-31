@@ -34,10 +34,10 @@ struct ProcessingView: View {
 
     private var inProgress: some View {
         VStack(spacing: 16) {
-            ProgressView().tint(.white).scaleEffect(1.4)
-            Text("Building your avatar…").font(.title3.bold()).foregroundStyle(.white)
+            ProgressView().tint(DS.Color.accent).scaleEffect(1.4)
+            Text("Building your avatar…").font(.title3.bold()).foregroundStyle(DS.Color.primaryText)
             Text("Validating your scan, estimating measurements, and generating a mobile-ready 3D model.")
-                .multilineTextAlignment(.center).foregroundStyle(.white.opacity(0.7))
+                .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)
         }
     }
 
@@ -45,7 +45,7 @@ struct ProcessingView: View {
         VStack(spacing: 18) {
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 44)).foregroundStyle(Theme.accent)
-            Text("Avatar ready!").font(.title.bold()).foregroundStyle(.white)
+            Text("Avatar ready!").font(.title.bold()).foregroundStyle(DS.Color.primaryText)
             AvatarCard(avatar: avatar)
             Button("Done") { coordinator.onFinish() }
                 .buttonStyle(PrimaryButtonStyle())
@@ -57,9 +57,9 @@ struct ProcessingView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 40)).foregroundStyle(.orange)
             Text("Scan didn't pass quality checks")
-                .font(.title3.bold()).foregroundStyle(.white)
+                .font(.title3.bold()).foregroundStyle(DS.Color.primaryText)
             Text(friendlyError())
-                .multilineTextAlignment(.center).foregroundStyle(.white.opacity(0.7))
+                .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)
             Button("Back") { coordinator.onFinish() }
                 .buttonStyle(PrimaryButtonStyle())
         }

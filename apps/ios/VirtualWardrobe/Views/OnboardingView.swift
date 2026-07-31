@@ -28,9 +28,9 @@ struct OnboardingView: View {
                         VStack(spacing: 20) {
                             Image(systemName: s.icon).font(.system(size: 72))
                                 .foregroundStyle(Theme.accent)
-                            Text(s.title).font(.title.bold()).foregroundStyle(.white)
+                            Text(s.title).font(.title.bold()).foregroundStyle(DS.Color.primaryText)
                             Text(s.body).multilineTextAlignment(.center)
-                                .foregroundStyle(.white.opacity(0.8)).padding(.horizontal, 32)
+                                .foregroundStyle(DS.Color.secondaryText).padding(.horizontal, 32)
                         }
                         .tag(i)
                     }

@@ -40,7 +40,7 @@ struct OutfitBuilderView: View {
         ZStack {
             Theme.backgroundGradient.ignoresSafeArea()
             if loading {
-                ProgressView().tint(.white)
+                ProgressView().tint(DS.Color.accent)
             } else if avatar == nil {
                 emptyState
             } else {
@@ -55,8 +55,8 @@ struct OutfitBuilderView: View {
                 ZStack {
                     Color.black.opacity(0.5).ignoresSafeArea()
                     VStack(spacing: 12) {
-                        ProgressView().tint(.white)
-                        Text("Rendering spin video…").foregroundStyle(.white)
+                        ProgressView().tint(DS.Color.accent)
+                        Text("Rendering spin video…").foregroundStyle(DS.Color.primaryText)
                     }
                     .padding(24).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
                 }
@@ -96,7 +96,7 @@ struct OutfitBuilderView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             VStack(alignment: .leading, spacing: 6) {
                 Text("MEASUREMENT-BASED 3D PREVIEW")
-                    .font(.caption2.bold()).foregroundStyle(.white.opacity(0.7))
+                    .font(.caption2.bold()).foregroundStyle(DS.Color.secondaryText)
                     .padding(.horizontal, 8).padding(.vertical, 4)
                     .background(.ultraThinMaterial, in: Capsule())
             }
@@ -116,7 +116,7 @@ struct OutfitBuilderView: View {
 
     private func presetButton(_ title: String, _ preset: CameraPreset) -> some View {
         Button { controller.setPreset(preset) } label: {
-            Text(title).font(.caption.bold()).foregroundStyle(.white)
+            Text(title).font(.caption.bold()).foregroundStyle(DS.Color.primaryText)
                 .padding(.horizontal, 14).padding(.vertical, 8)
                 .background(.ultraThinMaterial, in: Capsule())
         }
@@ -128,9 +128,9 @@ struct OutfitBuilderView: View {
                 ForEach(filters, id: \.self) { f in
                     Button { filter = f } label: {
                         Text(f).font(.caption.bold())
-                            .foregroundStyle(filter == f ? .white : .white.opacity(0.6))
+                            .foregroundStyle(filter == f ? DS.Color.onAccent : DS.Color.secondaryText)
                             .padding(.horizontal, 14).padding(.vertical, 7)
-                            .background(filter == f ? Theme.accent : Color.white.opacity(0.08),
+                            .background(filter == f ? DS.Color.accent : DS.Color.fill,
                                         in: Capsule())
                     }
                 }
@@ -143,11 +143,11 @@ struct OutfitBuilderView: View {
     private var picker: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Tap to dress your avatar").font(.subheadline.bold()).foregroundStyle(.white)
+                Text("Tap to dress your avatar").font(.subheadline.bold()).foregroundStyle(DS.Color.primaryText)
                 Spacer()
                 if !selected.isEmpty {
                     Button("Clear") { withAnimation { selected.removeAll() } }
-                        .font(.caption).foregroundStyle(.white.opacity(0.7))
+                        .font(.caption).foregroundStyle(DS.Color.secondaryText)
                 }
             }
             .padding(.horizontal)
@@ -156,12 +156,12 @@ struct OutfitBuilderView: View {
                     HStack(spacing: 8) {
                         ForEach(recs, id: \.0.id) { g, rec in
                             HStack(spacing: 4) {
-                                Text(g.name).font(.caption2).foregroundStyle(.white)
+                                Text(g.name).font(.caption2).foregroundStyle(DS.Color.primaryText)
                                 Text("Size \(rec.label)").font(.caption2.bold()).foregroundStyle(Theme.accent2)
-                                Text("· \(rec.note)").font(.caption2).foregroundStyle(.white.opacity(0.6))
+                                Text("· \(rec.note)").font(.caption2).foregroundStyle(DS.Color.secondaryText)
                             }
                             .padding(.horizontal, 10).padding(.vertical, 6)
-                            .background(Color.white.opacity(0.06), in: Capsule())
+                            .background(DS.Color.raised, in: Capsule())
                         }
                     }
                     .padding(.horizontal)
@@ -184,9 +184,9 @@ struct OutfitBuilderView: View {
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "figure.stand").font(.system(size: 46)).foregroundStyle(Theme.accent)
-            Text("No avatar yet").font(.headline).foregroundStyle(.white)
+            Text("No avatar yet").font(.headline).foregroundStyle(DS.Color.primaryText)
             Text("Run a body scan first, then come back to try on clothes in 3D.")
-                .multilineTextAlignment(.center).foregroundStyle(.white.opacity(0.7))
+                .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)
         }
         .padding(30)
     }
@@ -194,9 +194,9 @@ struct OutfitBuilderView: View {
     private func toastView(_ text: String) -> some View {
         VStack {
             Spacer()
-            Text(text).font(.subheadline.bold()).foregroundStyle(.white)
+            Text(text).font(.subheadline.bold()).foregroundStyle(DS.Color.onAccent)
                 .padding(.horizontal, 18).padding(.vertical, 12)
-                .background(Theme.accent, in: Capsule())
+                .background(DS.Color.accent, in: Capsule())
                 .padding(.bottom, 130)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         }
@@ -273,17 +273,21 @@ struct GarmentChip: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(GarmentAppearance.of(garment).color)
                     .frame(width: 64, height: 64)
-                    .overlay(Image(systemName: symbol).font(.title3).foregroundStyle(.white.opacity(0.9)))
-                    .overlay(RoundedRectangle(cornerRadius: 12)
-                        .stroke(selected ? .white : .clear, lineWidth: 2.5))
+                    // The swatch is filled with the garment's own saturated colour,
+                    // so its glyph and selection ring stay on-fill colours rather
+                    // than label colours in either appearance.
+                    .overlay(Image(systemName: symbol).font(.title3).foregroundStyle(DS.Color.onAccent))
+                    .overlay(RoundedRectangle(cornerRadius: DS.Radius.compact, style: .continuous)
+                        .stroke(selected ? DS.Color.onAccent : .clear, lineWidth: 2.5))
                     .overlay(alignment: .topTrailing) {
                         if selected {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.white, Theme.accent).padding(4)
+                                .foregroundStyle(DS.Color.onAccent, DS.Color.accent).padding(4)
                         }
                     }
                 Text(garment.name).font(.caption2).lineLimit(1)
-                    .foregroundStyle(.white.opacity(selected ? 1 : 0.7)).frame(width: 70)
+                    .foregroundStyle(selected ? DS.Color.primaryText : DS.Color.secondaryText)
+                    .frame(width: 70)
             }
         }
         .buttonStyle(.plain)

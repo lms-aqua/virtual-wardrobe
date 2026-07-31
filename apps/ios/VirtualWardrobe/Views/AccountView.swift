@@ -40,7 +40,7 @@ struct AccountView: View {
             row("Email", value: session.user?.email ?? "—")
             row("Account", value: session.user?.isAdult == true ? "Adult ✓" : "—")
         } header: { header("Profile") }
-        .listRowBackground(Color.white.opacity(0.05))
+        .listRowBackground(DS.Color.raisedGrouped)
     }
 
     private var preferencesSection: some View {
@@ -48,11 +48,11 @@ struct AccountView: View {
             Picker(selection: $unitsRaw) {
                 ForEach(Units.System.allCases) { Text($0.label).tag($0.rawValue) }
             } label: { label("Units", "ruler") }
-            .tint(.white)
+            .tint(DS.Color.accent)
             .onChange(of: unitsRaw) { session.pushPreferences() }
             NavigationLink { SettingsView() } label: { label("Server", "network") }
         } header: { header("Preferences") }
-        .listRowBackground(Color.white.opacity(0.05))
+        .listRowBackground(DS.Color.raisedGrouped)
     }
 
     private var dataSection: some View {
@@ -63,7 +63,7 @@ struct AccountView: View {
             NavigationLink { InfoView.howScanningWorks } label: { label("How scanning works", "camera.viewfinder") }
             NavigationLink { InfoView.privacyPromise } label: { label("Privacy promise", "lock.shield.fill") }
         } header: { header("Your data") }
-        .listRowBackground(Color.white.opacity(0.05))
+        .listRowBackground(DS.Color.raisedGrouped)
     }
 
     private var aboutSection: some View {
@@ -73,7 +73,7 @@ struct AccountView: View {
                 label("Source on GitHub", "chevron.left.forwardslash.chevron.right")
             }
         } header: { header("About") }
-        .listRowBackground(Color.white.opacity(0.05))
+        .listRowBackground(DS.Color.raisedGrouped)
     }
 
     private var dangerSection: some View {
@@ -84,19 +84,19 @@ struct AccountView: View {
                 else { label("Delete everything", "trash.fill").foregroundStyle(.red) }
             }
         }
-        .listRowBackground(Color.white.opacity(0.05))
+        .listRowBackground(DS.Color.raisedGrouped)
     }
 
     // MARK: helpers
     private func header(_ t: String) -> some View {
-        Text(t).foregroundStyle(.white.opacity(0.5))
+        Text(t).foregroundStyle(DS.Color.secondaryText)
     }
     private func label(_ t: String, _ symbol: String) -> some View {
-        Label(t, systemImage: symbol).foregroundStyle(.white)
+        Label(t, systemImage: symbol).foregroundStyle(DS.Color.primaryText)
     }
     private func row(_ t: String, value: String) -> some View {
-        HStack { Text(t).foregroundStyle(.white); Spacer()
-            Text(value).foregroundStyle(.white.opacity(0.6)) }
+        HStack { Text(t).foregroundStyle(DS.Color.primaryText); Spacer()
+            Text(value).foregroundStyle(DS.Color.secondaryText) }
     }
 
     private func del() async {
@@ -119,7 +119,7 @@ struct InfoView: View {
                     ForEach(points, id: \.self) { p in
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accent)
-                            Text(p).foregroundStyle(.white.opacity(0.9))
+                            Text(p).foregroundStyle(DS.Color.primaryText)
                         }
                     }
                 }

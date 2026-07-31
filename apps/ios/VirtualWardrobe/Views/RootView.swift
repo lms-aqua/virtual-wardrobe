@@ -8,7 +8,7 @@ struct RootView: View {
         ZStack {
             Theme.backgroundGradient.ignoresSafeArea()
             if !booted {
-                ProgressView().tint(.white)
+                ProgressView().tint(DS.Color.accent)
             } else if session.isAuthenticated {
                 DashboardView()
             } else {

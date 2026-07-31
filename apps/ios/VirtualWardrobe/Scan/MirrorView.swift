@@ -105,11 +105,11 @@ struct MirrorView: View {
         VStack {
             HStack {
                 Text(mirror.bodyVisible ? "Body tracked · move back for full body" : "Point at a person…")
-                    .font(.caption.bold()).foregroundStyle(.white)
+                    .font(.caption.bold()).foregroundStyle(DS.Color.primaryText)
                     .padding(.horizontal, 12).padding(.vertical, 7)
                     .background(.ultraThinMaterial, in: Capsule())
                 Spacer()
-                Button("Close") { onFinish() }.foregroundStyle(.white)
+                Button("Close") { onFinish() }.foregroundStyle(DS.Color.primaryText)
                     .padding(.horizontal, 12).padding(.vertical, 7)
                     .background(.ultraThinMaterial, in: Capsule())
             }.padding()
@@ -134,7 +134,7 @@ struct MirrorView: View {
         VStack(spacing: 14) {
             Image(systemName: "arkit").font(.system(size: 44)).foregroundStyle(Theme.accent)
             Text("AR mirror needs a device with an A12 chip or newer")
-                .font(.title3.bold()).foregroundStyle(.white).multilineTextAlignment(.center)
+                .font(.title3.bold()).foregroundStyle(DS.Color.primaryText).multilineTextAlignment(.center)
             Button("Close") { onFinish() }.buttonStyle(PrimaryButtonStyle())
         }.padding(28)
     }

@@ -13,7 +13,7 @@ struct PrivacyControlsView: View {
                     VStack(alignment: .leading, spacing: 18) {
                         VStack(alignment: .leading, spacing: 12) {
                             Label("Your data", systemImage: "lock.shield.fill")
-                                .font(.headline).foregroundStyle(.white)
+                                .font(.headline).foregroundStyle(DS.Color.primaryText)
                             row("Scans upload to private storage only.")
                             row("Raw photos are deleted after your avatar is generated.")
                             row("No face recognition is ever performed.")
@@ -27,13 +27,13 @@ struct PrivacyControlsView: View {
                             Label("Sign out", systemImage: "arrow.right.square")
                                 .frame(maxWidth: .infinity, minHeight: 50)
                         }
-                        .foregroundStyle(.white)
-                        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+                        .foregroundStyle(DS.Color.primaryText)
+                        .background(DS.Color.raised, in: RoundedRectangle(cornerRadius: 16))
 
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Danger zone").font(.headline).foregroundStyle(.white)
+                            Text("Danger zone").font(.headline).foregroundStyle(DS.Color.primaryText)
                             Text("This permanently deletes your scans, avatar, measurements, outfits, and account. It cannot be undone.")
-                                .font(.footnote).foregroundStyle(.white.opacity(0.7))
+                                .font(.footnote).foregroundStyle(DS.Color.secondaryText)
                             Button(role: .destructive) {
                                 showDeleteConfirm = true
                             } label: {
@@ -41,7 +41,7 @@ struct PrivacyControlsView: View {
                                 else { Label("Delete everything", systemImage: "trash.fill")
                                         .frame(maxWidth: .infinity, minHeight: 50) }
                             }
-                            .foregroundStyle(.white)
+                            .foregroundStyle(DS.Color.primaryText)
                             .background(Color.red.opacity(0.85), in: RoundedRectangle(cornerRadius: 16))
                         }
                         .card()
@@ -62,7 +62,7 @@ struct PrivacyControlsView: View {
     private func row(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accent)
-            Text(text).foregroundStyle(.white.opacity(0.85))
+            Text(text).foregroundStyle(DS.Color.primaryText)
         }
     }
 

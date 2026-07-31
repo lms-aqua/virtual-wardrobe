@@ -19,15 +19,15 @@ struct MeasurementsView: View {
         ZStack {
             Theme.backgroundGradient.ignoresSafeArea()
             if loading {
-                ProgressView().tint(.white)
+                ProgressView().tint(DS.Color.accent)
             } else if avatar == nil {
                 Text("No avatar yet — run a scan first.")
-                    .foregroundStyle(.white.opacity(0.7)).padding()
+                    .foregroundStyle(DS.Color.secondaryText).padding()
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
                         Text("Estimated from your scan, shown in \(Units.system.suffix). Tweak any value and save — your 3D avatar updates to match.")
-                            .font(.footnote).foregroundStyle(.white.opacity(0.7))
+                            .font(.footnote).foregroundStyle(DS.Color.secondaryText)
                         group {
                             row("Height", unit: Units.system.suffix, text: $fields.height)
                             row("Chest", unit: Units.system.suffix, text: $fields.chest)
@@ -38,7 +38,7 @@ struct MeasurementsView: View {
                         Button {
                             Task { await save() }
                         } label: {
-                            if saving { ProgressView().tint(.white) }
+                            if saving { ProgressView().tint(DS.Color.accent) }
                             else { Text(saved ? "Saved ✓" : "Save measurements") }
                         }
                         .buttonStyle(PrimaryButtonStyle())
@@ -58,14 +58,14 @@ struct MeasurementsView: View {
 
     private func row(_ label: String, unit: String, text: Binding<String>) -> some View {
         HStack {
-            Text(label).foregroundStyle(.white)
+            Text(label).foregroundStyle(DS.Color.primaryText)
             Spacer()
             TextField("—", text: text)
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
                 .frame(width: 90)
-                .foregroundStyle(.white)
-            Text(unit).foregroundStyle(.white.opacity(0.5)).frame(width: 28, alignment: .leading)
+                .foregroundStyle(DS.Color.primaryText)
+            Text(unit).foregroundStyle(DS.Color.secondaryText).frame(width: 28, alignment: .leading)
         }
         .accessibilityElement(children: .combine)
     }

@@ -76,6 +76,10 @@ enum DS {
         static let tertiaryText = SwiftUI.Color(uiColor: .tertiaryLabel)
         static let separator = SwiftUI.Color(uiColor: .separator)
         static let accent = SwiftUI.Color(red: 0.43, green: 0.37, blue: 0.99)
+        /// Content drawn *on top of* an accent fill. The accent is dark enough in
+        /// both appearances that white stays the correct choice — this is not a
+        /// label colour and must never be swapped for one.
+        static let onAccent = SwiftUI.Color.white
         static let success = SwiftUI.Color(uiColor: .systemGreen)
         static let warning = SwiftUI.Color(uiColor: .systemOrange)
         static let destructive = SwiftUI.Color(uiColor: .systemRed)

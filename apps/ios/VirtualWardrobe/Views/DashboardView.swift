@@ -38,7 +38,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 20) {
                         greeting
                         if loading {
-                            ProgressView().tint(.white).frame(maxWidth: .infinity).padding(.top, 40)
+                            ProgressView().tint(DS.Color.accent).frame(maxWidth: .infinity).padding(.top, 40)
                         } else if let avatar = avatars.first {
                             AvatarCard(avatar: avatar)
                             NavigationLink {
@@ -62,8 +62,8 @@ struct HomeView: View {
                                 }
                             }
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .background(Color.white.opacity(0.08),
+                            .foregroundStyle(DS.Color.primaryText)
+                            .background(DS.Color.raised,
                                         in: RoundedRectangle(cornerRadius: 16))
                             HStack(spacing: 12) {
                                 NavigationLink { CustomizeView() } label: {
@@ -76,8 +76,8 @@ struct HomeView: View {
                                 }
                             }
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .background(Color.white.opacity(0.08),
+                            .foregroundStyle(DS.Color.primaryText)
+                            .background(DS.Color.raised,
                                         in: RoundedRectangle(cornerRadius: 16))
                         } else {
                             emptyState
@@ -110,9 +110,9 @@ struct HomeView: View {
 
     private var greeting: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Welcome back").foregroundStyle(.white.opacity(0.6))
+            Text("Welcome back").foregroundStyle(DS.Color.secondaryText)
             Text(session.user?.email ?? "")
-                .font(.title2.bold()).foregroundStyle(.white)
+                .font(.title2.bold()).foregroundStyle(DS.Color.primaryText)
         }
     }
 
@@ -120,10 +120,10 @@ struct HomeView: View {
         VStack(spacing: 12) {
             Image(systemName: "figure.stand")
                 .font(.system(size: 48)).foregroundStyle(Theme.accent)
-            Text("No avatar yet").font(.headline).foregroundStyle(.white)
+            Text("No avatar yet").font(.headline).foregroundStyle(DS.Color.primaryText)
             Text("Do a quick guided body scan to build your personalized 3D avatar.")
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(DS.Color.secondaryText)
         }
         .frame(maxWidth: .infinity)
         .card()
@@ -140,8 +140,8 @@ struct HomeView: View {
             Label(avatars.isEmpty ? "Start body scan" : "New scan / measure",
                   systemImage: "camera.viewfinder")
                 .frame(maxWidth: .infinity, minHeight: 54)
-                .foregroundStyle(.white)
-                .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 16))
+                .foregroundStyle(DS.Color.onAccent)
+                .background(DS.Color.accent, in: RoundedRectangle(cornerRadius: DS.Radius.control, style: .continuous))
         }
     }
 
@@ -157,19 +157,19 @@ struct AvatarCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("Your avatar").font(.headline).foregroundStyle(.white)
+                Text("Your avatar").font(.headline).foregroundStyle(DS.Color.primaryText)
                 Spacer()
                 if avatar.isMock {
                     Text("MOCK").font(.caption2.bold())
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(Theme.accent.opacity(0.3), in: Capsule())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(DS.Color.primaryText)
                 }
             }
             RemoteThumb(urlString: avatar.thumbUrl)
                 .frame(height: 220)
                 .frame(maxWidth: .infinity)
-                .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 16))
+                .background(DS.Color.raised, in: RoundedRectangle(cornerRadius: 16))
             if let m = avatar.measurements {
                 HStack(spacing: 18) {
                     stat("Height", m.heightCm)
@@ -178,11 +178,11 @@ struct AvatarCard: View {
                     stat("Hip", m.hipCm)
                 }
                 Text("Units: \(Units.system.suffix)")
-                    .font(.caption2).foregroundStyle(.white.opacity(0.4))
+                    .font(.caption2).foregroundStyle(DS.Color.tertiaryText)
             }
             if let c = avatar.confidence {
                 Text("Estimated confidence: \(Int(c * 100))% — measurements are editable.")
-                    .font(.footnote).foregroundStyle(.white.opacity(0.55))
+                    .font(.footnote).foregroundStyle(DS.Color.secondaryText)
             }
         }
         .card()
@@ -191,8 +191,8 @@ struct AvatarCard: View {
     private func stat(_ label: String, _ value: Double?) -> some View {
         VStack {
             Text(Units.value(cm: value))
-                .font(.headline).foregroundStyle(.white)
-            Text(label).font(.caption2).foregroundStyle(.white.opacity(0.6))
+                .font(.headline).foregroundStyle(DS.Color.primaryText)
+            Text(label).font(.caption2).foregroundStyle(DS.Color.secondaryText)
         }
         .frame(maxWidth: .infinity)
     }
@@ -207,13 +207,13 @@ struct RemoteThumb: View {
                 switch phase {
                 case .success(let img): img.resizable().scaledToFit()
                 case .failure: placeholder
-                default: ProgressView().tint(.white)
+                default: ProgressView().tint(DS.Color.accent)
                 }
             }
         } else { placeholder }
     }
     private var placeholder: some View {
         Image(systemName: "figure.stand")
-            .font(.system(size: 60)).foregroundStyle(.white.opacity(0.3))
+            .font(.system(size: 60)).foregroundStyle(DS.Color.tertiaryText)
     }
 }

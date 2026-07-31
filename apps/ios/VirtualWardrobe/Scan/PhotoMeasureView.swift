@@ -26,13 +26,13 @@ struct PhotoMeasureView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         Text("Enter your height, pick a clear full-body photo, and we'll estimate your proportions.")
-                            .font(.footnote).foregroundStyle(.white.opacity(0.75))
+                            .font(.footnote).foregroundStyle(DS.Color.secondaryText)
                         HStack {
-                            Text("Height").foregroundStyle(.white)
+                            Text("Height").foregroundStyle(DS.Color.primaryText)
                             Spacer()
                             TextField("—", text: $heightText).keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing).frame(width: 90).foregroundStyle(.white)
-                            Text(Units.system.suffix).foregroundStyle(.white.opacity(0.5))
+                                .multilineTextAlignment(.trailing).frame(width: 90).foregroundStyle(DS.Color.primaryText)
+                            Text(Units.system.suffix).foregroundStyle(DS.Color.secondaryText)
                         }.card()
 
                         PhotosPicker(selection: $pick, matching: .images) {
@@ -53,12 +53,12 @@ struct PhotoMeasureView: View {
                                 metric("Inseam", r.inseamCm)
                             }.card()
                             Button { Task { await save(r) } } label: {
-                                if busy { ProgressView().tint(.white) }
+                                if busy { ProgressView().tint(DS.Color.accent) }
                                 else { Text(saved ? "Saved ✓" : "Use these measurements") }
                             }.buttonStyle(PrimaryButtonStyle())
                         } else if image != nil {
                             Button { analyze() } label: {
-                                if busy { ProgressView().tint(.white) } else { Text("Analyze photo") }
+                                if busy { ProgressView().tint(DS.Color.accent) } else { Text("Analyze photo") }
                             }.buttonStyle(PrimaryButtonStyle(enabled: !busy && Units.toCm(heightText) != nil))
                                 .disabled(busy || Units.toCm(heightText) == nil)
                         }
@@ -78,8 +78,8 @@ struct PhotoMeasureView: View {
     }
 
     private func metric(_ label: String, _ cm: Double?) -> some View {
-        HStack { Text(label).foregroundStyle(.white); Spacer()
-            Text(Units.display(cm: cm)).foregroundStyle(.white.opacity(0.8)) }
+        HStack { Text(label).foregroundStyle(DS.Color.primaryText); Spacer()
+            Text(Units.display(cm: cm)).foregroundStyle(DS.Color.secondaryText) }
     }
 
     private func loadImage() async {

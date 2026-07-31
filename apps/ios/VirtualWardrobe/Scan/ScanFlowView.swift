@@ -151,7 +151,7 @@ struct ScanFlowView: View {
             if let n = model.countdown {
                 Text("\(n)")
                     .font(.system(size: 96, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(DS.Color.primaryText)
                     .transition(.scale.combined(with: .opacity))
             } else if model.phase != .idle {
                 ProgressRing(progress: model.progress)
@@ -163,7 +163,7 @@ struct ScanFlowView: View {
                 Text(model.phase == .idle
                      ? "Tap start, then slowly spin in a full circle keeping your whole body in frame."
                      : model.status)
-                    .font(.headline).foregroundStyle(.white)
+                    .font(.headline).foregroundStyle(DS.Color.primaryText)
                     .multilineTextAlignment(.center)
                 if let e = model.error {
                     Text(e).font(.footnote).foregroundStyle(.red)
@@ -177,8 +177,8 @@ struct ScanFlowView: View {
                     .buttonStyle(PrimaryButtonStyle())
                 } else {
                     HStack(spacing: 8) {
-                        ProgressView().tint(.white)
-                        Text(phaseLabel).foregroundStyle(.white.opacity(0.85))
+                        ProgressView().tint(DS.Color.accent)
+                        Text(phaseLabel).foregroundStyle(DS.Color.primaryText)
                     }
                     .padding(.vertical, 12)
                 }
@@ -210,7 +210,7 @@ struct ScanFlowView: View {
                         Label(camera.position == .front ? "Front" : "Back",
                               systemImage: "arrow.triangle.2.circlepath.camera")
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(DS.Color.primaryText)
                             .padding(.horizontal, 14).padding(.vertical, 9)
                             .background(.ultraThinMaterial, in: Capsule())
                     }
@@ -226,9 +226,9 @@ struct ScanFlowView: View {
             Image(systemName: "camera.metering.unknown")
                 .font(.system(size: 44)).foregroundStyle(Theme.accent)
             Text("Camera access needed")
-                .font(.title2.bold()).foregroundStyle(.white)
+                .font(.title2.bold()).foregroundStyle(DS.Color.primaryText)
             Text("We use the camera only for the scan you start. Enable it in Settings.")
-                .multilineTextAlignment(.center).foregroundStyle(.white.opacity(0.7))
+                .multilineTextAlignment(.center).foregroundStyle(DS.Color.secondaryText)
             Button("Open Settings") {
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(url)
@@ -245,7 +245,7 @@ struct ProgressRing: View {
     let progress: Double
     var body: some View {
         ZStack {
-            Circle().stroke(Color.white.opacity(0.15), lineWidth: 10)
+            Circle().stroke(DS.Color.separator, lineWidth: 10)
             Circle()
                 .trim(from: 0, to: max(0.001, progress))
                 .stroke(Theme.brandGradient,
@@ -253,7 +253,7 @@ struct ProgressRing: View {
                 .rotationEffect(.degrees(-90))
                 .animation(.easeInOut(duration: 0.25), value: progress)
             Text("\(Int(progress * 100))%")
-                .font(.title2.bold()).foregroundStyle(.white)
+                .font(.title2.bold()).foregroundStyle(DS.Color.primaryText)
         }
     }
 }
