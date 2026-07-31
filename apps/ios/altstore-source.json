@@ -17,14 +17,14 @@
       "version": "1.4.0",
       "versionDate": "2026-07-31T02:00:00-04:00",
       "versionDescription": "Cross-device sync for units, avatar customization and favorites; the shop now shows real prices and buy links; server-generated 3D avatar mesh.",
-      "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+      "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v1.4.0/VirtualWardrobe-unsigned.ipa",
       "size": 475725,
       "versions": [
         {
           "version": "1.4.0",
           "date": "2026-07-31T02:00:00-04:00",
           "localizedDescription": "☁️ Virtual Wardrobe 1.4 — sync & shop\n\n🔄 CROSS-DEVICE SYNC\nYour units (cm/in), avatar skin tone & body build, and favourite outfits now sync to your account — sign in on another device and they follow you.\n\n🛍️ SHOP GOT REAL\nThe shop now shows real prices and Buy links.\n\n🧍 SERVER-GENERATED 3D BODY\nBehind the scenes your avatar is now a real 3D mesh generated on the server (loadable by any glTF/AR viewer), and scans process in the background.\n\nStill a stylized, measurement-based preview — full body reconstruction and cloth simulation are the road ahead.",
-          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v1.4.0/VirtualWardrobe-unsigned.ipa",
           "size": 475725,
           "minOSVersion": "17.0"
         },

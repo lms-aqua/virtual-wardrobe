@@ -98,14 +98,20 @@ jobs:
           path: apps/ios/VirtualWardrobe-unsigned.ipa
           if-no-files-found: error
 
-      - name: Publish to "ios-latest" release
+      - name: Publish releases (permanent per-version + moving latest)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eo pipefail
+          NOTES="Virtual Wardrobe $VERSION — unsigned .ipa for sideloading (AppDB / AltStore / Sideloadly / ESign / TrollStore). See the README for install steps."
+          ASSETS="VirtualWardrobe-unsigned.ipa altstore-source.json icon.png"
+          # 1) Permanent, never-deleted release for THIS version.
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release upload "v$VERSION" $ASSETS --clobber
+          else
+            gh release create "v$VERSION" $ASSETS --title "Virtual Wardrobe $VERSION" --notes "$NOTES"
+          fi
+          # 2) Moving "ios-latest" pointer (recreated each build) for a stable URL.
           gh release delete ios-latest --yes --cleanup-tag 2>/dev/null || true
-          gh release create ios-latest \
-            VirtualWardrobe-unsigned.ipa altstore-source.json icon.png \
-            --title "iOS $VERSION (unsigned)" \
-            --notes "Version $VERSION. Unsigned .ipa for sideloading (AppDB / AltStore / Sideloadly / ESign / TrollStore). AltStore source: $GITHUB_SERVER_URL/${{ github.repository }}/releases/download/ios-latest/altstore-source.json"
-          echo "AltStore source URL: $GITHUB_SERVER_URL/${{ github.repository }}/releases/download/ios-latest/altstore-source.json"
+          gh release create ios-latest $ASSETS --title "Latest ($VERSION)" --notes "$NOTES Permanent copy: v$VERSION."
+          echo "Released v$VERSION (kept) + ios-latest."
