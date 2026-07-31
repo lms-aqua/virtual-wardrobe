@@ -1,14 +1,19 @@
 import SwiftUI
 
 struct DashboardView: View {
+    @AppStorage("vw.onboarded") private var onboarded = false
+
     var body: some View {
         TabView {
             HomeView()
                 .tabItem { Label("Home", systemImage: "house.fill") }
             NavigationStack { OutfitBuilderView() }
                 .tabItem { Label("Try On", systemImage: "cube.transparent.fill") }
-            PrivacyControlsView()
-                .tabItem { Label("Privacy", systemImage: "lock.shield.fill") }
+            AccountView()
+                .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+        }
+        .sheet(isPresented: Binding(get: { !onboarded }, set: { if !$0 { onboarded = true } })) {
+            OnboardingView()
         }
     }
 }
@@ -36,12 +41,21 @@ struct HomeView: View {
                                 Label("Try on in 3D", systemImage: "cube.transparent.fill")
                             }
                             .buttonStyle(PrimaryButtonStyle())
-                            NavigationLink {
-                                MeasurementsView()
-                            } label: {
-                                Label("Edit measurements", systemImage: "ruler.fill")
-                                    .frame(maxWidth: .infinity, minHeight: 50)
+                            HStack(spacing: 12) {
+                                NavigationLink {
+                                    MeasurementsView()
+                                } label: {
+                                    Label("Measurements", systemImage: "ruler.fill")
+                                        .frame(maxWidth: .infinity, minHeight: 50)
+                                }
+                                NavigationLink {
+                                    SavedOutfitsView()
+                                } label: {
+                                    Label("Outfits", systemImage: "square.stack.3d.up.fill")
+                                        .frame(maxWidth: .infinity, minHeight: 50)
+                                }
                             }
+                            .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.white)
                             .background(Color.white.opacity(0.08),
                                         in: RoundedRectangle(cornerRadius: 16))
@@ -118,11 +132,13 @@ struct AvatarCard: View {
                 .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 16))
             if let m = avatar.measurements {
                 HStack(spacing: 18) {
-                    stat("Height", m.heightCm, "cm")
-                    stat("Chest", m.chestCm, "cm")
-                    stat("Waist", m.waistCm, "cm")
-                    stat("Hip", m.hipCm, "cm")
+                    stat("Height", m.heightCm)
+                    stat("Chest", m.chestCm)
+                    stat("Waist", m.waistCm)
+                    stat("Hip", m.hipCm)
                 }
+                Text("Units: \(Units.system.suffix)")
+                    .font(.caption2).foregroundStyle(.white.opacity(0.4))
             }
             if let c = avatar.confidence {
                 Text("Estimated confidence: \(Int(c * 100))% — measurements are editable.")
@@ -132,9 +148,9 @@ struct AvatarCard: View {
         .card()
     }
 
-    private func stat(_ label: String, _ value: Double?, _ unit: String) -> some View {
+    private func stat(_ label: String, _ value: Double?) -> some View {
         VStack {
-            Text(value != nil ? "\(Int(value!))" : "—")
+            Text(Units.value(cm: value))
                 .font(.headline).foregroundStyle(.white)
             Text(label).font(.caption2).foregroundStyle(.white.opacity(0.6))
         }

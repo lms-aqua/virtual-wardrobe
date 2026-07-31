@@ -2,19 +2,30 @@ import SwiftUI
 import UIKit
 
 /// The 3D try-on experience: your measurement-based avatar with tappable
-/// garments layered on, plus save-outfit.
+/// garments layered on, camera presets, snapshot/share, and save-outfit.
 struct OutfitBuilderView: View {
     @EnvironmentObject var session: AuthStore
+    var initialGarmentIds: Set<String>? = nil
+
+    @StateObject private var controller = AvatarSceneController()
     @State private var avatar: AvatarDTO?
     @State private var garments: [GarmentDTO] = []
     @State private var selected: Set<String> = []
+    @State private var filter: String = "All"
     @State private var loading = true
     @State private var saving = false
     @State private var showNaming = false
     @State private var outfitName = "My outfit"
     @State private var toast: String?
+    @State private var shareItem: ShareImage?
+
+    private let filters = ["All", "Tops", "Dresses", "Bottoms", "Outerwear", "Shoes"]
 
     private var chosen: [GarmentDTO] { garments.filter { selected.contains($0.id) } }
+    private var visibleGarments: [GarmentDTO] {
+        guard filter != "All" else { return garments }
+        return garments.filter { categoryMatch($0.category, filter) }
+    }
 
     var body: some View {
         ZStack {
@@ -26,6 +37,7 @@ struct OutfitBuilderView: View {
             } else {
                 VStack(spacing: 0) {
                     stage
+                    filterBar
                     picker
                 }
             }
@@ -35,13 +47,19 @@ struct OutfitBuilderView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                if !selected.isEmpty {
-                    Button("Save") { outfitName = "My outfit"; showNaming = true }
-                        .disabled(saving)
-                }
+                Menu {
+                    Button { share() } label: { Label("Share snapshot", systemImage: "square.and.arrow.up") }
+                    if !selected.isEmpty {
+                        Button { outfitName = "My outfit"; showNaming = true } label: {
+                            Label("Save outfit", systemImage: "square.and.arrow.down")
+                        }
+                    }
+                } label: { Image(systemName: "ellipsis.circle") }
             }
         }
         .task { await load() }
+        .onChange(of: selected) { rebuild() }
+        .sheet(item: $shareItem) { ShareSheet(items: [$0.image]) }
         .alert("Name your outfit", isPresented: $showNaming) {
             TextField("Outfit name", text: $outfitName)
             Button("Save") { Task { await save() } }
@@ -51,25 +69,58 @@ struct OutfitBuilderView: View {
 
     private var stage: some View {
         ZStack(alignment: .topLeading) {
-            AvatarSceneView(measurements: avatar?.measurements, garments: chosen)
+            AvatarSceneView(controller: controller)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             VStack(alignment: .leading, spacing: 6) {
                 Text("MEASUREMENT-BASED 3D PREVIEW")
                     .font(.caption2.bold()).foregroundStyle(.white.opacity(0.7))
                     .padding(.horizontal, 8).padding(.vertical, 4)
                     .background(.ultraThinMaterial, in: Capsule())
-                Text("Drag to rotate · pinch to zoom")
-                    .font(.caption2).foregroundStyle(.white.opacity(0.5))
             }
             .padding(16)
+            VStack {
+                Spacer()
+                HStack(spacing: 10) {
+                    presetButton("Front", .front)
+                    presetButton("Side", .side)
+                    presetButton("Back", .back)
+                }
+                .padding(.bottom, 10)
+            }
+            .frame(maxWidth: .infinity)
         }
+    }
+
+    private func presetButton(_ title: String, _ preset: CameraPreset) -> some View {
+        Button { controller.setPreset(preset) } label: {
+            Text(title).font(.caption.bold()).foregroundStyle(.white)
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .background(.ultraThinMaterial, in: Capsule())
+        }
+    }
+
+    private var filterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(filters, id: \.self) { f in
+                    Button { filter = f } label: {
+                        Text(f).font(.caption.bold())
+                            .foregroundStyle(filter == f ? .white : .white.opacity(0.6))
+                            .padding(.horizontal, 14).padding(.vertical, 7)
+                            .background(filter == f ? Theme.accent : Color.white.opacity(0.08),
+                                        in: Capsule())
+                    }
+                }
+            }
+            .padding(.horizontal)
+        }
+        .padding(.top, 10)
     }
 
     private var picker: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Tap to dress your avatar").font(.subheadline.bold())
-                    .foregroundStyle(.white)
+                Text("Tap to dress your avatar").font(.subheadline.bold()).foregroundStyle(.white)
                 Spacer()
                 if !selected.isEmpty {
                     Button("Clear") { withAnimation { selected.removeAll() } }
@@ -79,15 +130,13 @@ struct OutfitBuilderView: View {
             .padding(.horizontal)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(garments) { g in
-                        GarmentChip(garment: g, selected: selected.contains(g.id)) {
-                            toggle(g.id)
-                        }
+                    ForEach(visibleGarments) { g in
+                        GarmentChip(garment: g, selected: selected.contains(g.id)) { toggle(g.id) }
                     }
                 }
                 .padding(.horizontal)
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, 10)
         }
         .padding(.top, 12)
         .background(.ultraThinMaterial)
@@ -109,23 +158,43 @@ struct OutfitBuilderView: View {
             Text(text).font(.subheadline.bold()).foregroundStyle(.white)
                 .padding(.horizontal, 18).padding(.vertical, 12)
                 .background(Theme.accent, in: Capsule())
-                .padding(.bottom, 120)
+                .padding(.bottom, 130)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }
 
+    private func categoryMatch(_ category: String, _ filter: String) -> Bool {
+        switch filter {
+        case "Tops": return category == "top"
+        case "Dresses": return category == "dress"
+        case "Bottoms": return category == "bottom"
+        case "Outerwear": return category == "outerwear"
+        case "Shoes": return category == "footwear"
+        default: return true
+        }
+    }
+
     private func toggle(_ id: String) {
-        let gen = UIImpactFeedbackGenerator(style: .light); gen.impactOccurred()
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         withAnimation(.easeInOut(duration: 0.2)) {
             if selected.contains(id) { selected.remove(id) } else { selected.insert(id) }
         }
+    }
+
+    private func rebuild() { controller.update(measurements: avatar?.measurements, garments: chosen) }
+
+    private func share() {
+        controller.setPreset(.front)
+        shareItem = ShareImage(image: controller.snapshot())
     }
 
     private func load() async {
         loading = true
         avatar = (try? await session.api.avatars())?.first
         garments = (try? await session.api.garments()) ?? []
+        if let ids = initialGarmentIds { selected = ids }
         loading = false
+        rebuild()
     }
 
     private func save() async {
@@ -133,8 +202,7 @@ struct OutfitBuilderView: View {
         let items = chosen.map {
             OutfitItemIn(garmentId: $0.id, sizeLabel: "M", layerIndex: $0.layeringOrder)
         }
-        _ = try? await session.api.createOutfit(
-            name: outfitName, avatarId: avatar?.id, items: items)
+        _ = try? await session.api.createOutfit(name: outfitName, avatarId: avatar?.id, items: items)
         await flash("Outfit saved ✓")
     }
 
@@ -156,23 +224,17 @@ struct GarmentChip: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(GarmentAppearance.of(garment).color)
                     .frame(width: 64, height: 64)
-                    .overlay(
-                        Image(systemName: symbol)
-                            .font(.title3).foregroundStyle(.white.opacity(0.9))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(selected ? .white : .clear, lineWidth: 2.5))
+                    .overlay(Image(systemName: symbol).font(.title3).foregroundStyle(.white.opacity(0.9)))
+                    .overlay(RoundedRectangle(cornerRadius: 12)
+                        .stroke(selected ? .white : .clear, lineWidth: 2.5))
                     .overlay(alignment: .topTrailing) {
                         if selected {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.white, Theme.accent)
-                                .padding(4)
+                                .foregroundStyle(.white, Theme.accent).padding(4)
                         }
                     }
                 Text(garment.name).font(.caption2).lineLimit(1)
-                    .foregroundStyle(.white.opacity(selected ? 1 : 0.7))
-                    .frame(width: 70)
+                    .foregroundStyle(.white.opacity(selected ? 1 : 0.7)).frame(width: 70)
             }
         }
         .buttonStyle(.plain)

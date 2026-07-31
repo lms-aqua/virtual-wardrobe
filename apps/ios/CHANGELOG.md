@@ -4,6 +4,14 @@ The AltStore-visible changelog lives in `altstore-source.json`
 (`apps[0].versions[].localizedDescription`). Bump the `version` there to release;
 CI builds the `.ipa` at that exact version so AltStore detects the update.
 
+## 1.1.0
+- **Camera presets** (Front / Side / Back) + **snapshot share** in the 3D try-on.
+- **Category filters** (Tops/Dresses/Bottoms/Outerwear/Shoes).
+- **Saved Outfits** screen — reopen in 3D, swipe to delete.
+- **Settings hub** — units (cm/in), server, data & privacy, how-it-works, about.
+- **Onboarding** walkthrough on first launch.
+- Unit preference applied across measurements + dashboard.
+
 ## 1.0.0 — first full release
 - **Try on clothes in 3D** — a rotatable, measurement-based 3D avatar (SceneKit)
   built from your body dimensions. Tap garments to dress it; outfits layer live.

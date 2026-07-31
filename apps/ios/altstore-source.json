@@ -14,12 +14,20 @@
       "iconURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/icon.png",
       "tintColor": "6D5EFC",
       "category": "lifestyle",
-      "version": "1.0.0",
-      "versionDate": "2026-07-30T22:00:00-04:00",
-      "versionDescription": "The first full release: try on clothes on a rotatable 3D avatar built from your measurements, faster scanning, and a measurements editor.",
+      "version": "1.1.0",
+      "versionDate": "2026-07-30T23:00:00-04:00",
+      "versionDescription": "More of everything: camera presets + snapshot sharing, category filters, a Saved Outfits manager, a full Settings hub with unit preferences, and guided onboarding.",
       "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
-      "size": 411466,
+      "size": 475725,
       "versions": [
+        {
+          "version": "1.1.0",
+          "date": "2026-07-30T23:00:00-04:00",
+          "localizedDescription": "🎬 Virtual Wardrobe 1.1 — more of everything\n\n🔄 ROTATE & POSE YOUR AVATAR\nNew Front / Side / Back camera presets in the 3D try-on, and share a snapshot of your look.\n\n🧥 FILTER THE CLOSET\nBrowse clothes by category — Tops, Dresses, Bottoms, Outerwear, Shoes.\n\n💾 MANAGE YOUR OUTFITS\nA new Saved Outfits screen — reopen any look in 3D or swipe to delete.\n\n⚙️ A REAL SETTINGS HUB\nUnits (cm / inches), server, data & privacy controls, how-scanning-works, and about — all in one place.\n\n👋 GUIDED ONBOARDING\nA quick walkthrough the first time you open the app.\n\nPlus polish throughout. Still a measurement-based 3D preview — LiDAR body scanning and true cloth simulation are next.",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "size": 475725,
+          "minOSVersion": "17.0"
+        },
         {
           "version": "1.0.0",
           "date": "2026-07-30T22:00:00-04:00",

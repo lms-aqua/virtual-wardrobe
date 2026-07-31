@@ -26,14 +26,14 @@ struct MeasurementsView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
-                        Text("These are estimated from your scan. Tweak any value and save — your 3D avatar updates to match.")
+                        Text("Estimated from your scan, shown in \(Units.system.suffix). Tweak any value and save — your 3D avatar updates to match.")
                             .font(.footnote).foregroundStyle(.white.opacity(0.7))
                         group {
-                            row("Height", unit: "cm", text: $fields.height)
-                            row("Chest", unit: "cm", text: $fields.chest)
-                            row("Waist", unit: "cm", text: $fields.waist)
-                            row("Hip", unit: "cm", text: $fields.hip)
-                            row("Inseam", unit: "cm", text: $fields.inseam)
+                            row("Height", unit: Units.system.suffix, text: $fields.height)
+                            row("Chest", unit: Units.system.suffix, text: $fields.chest)
+                            row("Waist", unit: Units.system.suffix, text: $fields.waist)
+                            row("Hip", unit: Units.system.suffix, text: $fields.hip)
+                            row("Inseam", unit: Units.system.suffix, text: $fields.inseam)
                         }
                         Button {
                             Task { await save() }
@@ -70,7 +70,7 @@ struct MeasurementsView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func fmt(_ v: Double?) -> String { v.map { String(format: "%.0f", $0) } ?? "" }
+    private func fmt(_ v: Double?) -> String { v == nil ? "" : Units.value(cm: v) }
 
     private func load() async {
         loading = true
@@ -86,9 +86,9 @@ struct MeasurementsView: View {
         guard let id = avatar?.id else { return }
         saving = true; saved = false; defer { saving = false }
         let patch = MeasurementPatch(
-            heightCm: Double(fields.height), chestCm: Double(fields.chest),
-            waistCm: Double(fields.waist), hipCm: Double(fields.hip),
-            inseamCm: Double(fields.inseam))
+            heightCm: Units.toCm(fields.height), chestCm: Units.toCm(fields.chest),
+            waistCm: Units.toCm(fields.waist), hipCm: Units.toCm(fields.hip),
+            inseamCm: Units.toCm(fields.inseam))
         if let updated = try? await session.api.patchMeasurements(avatarId: id, patch) {
             avatar = updated
             saved = true

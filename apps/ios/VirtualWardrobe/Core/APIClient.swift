@@ -91,6 +91,7 @@ struct APIClient {
     }
     func garments() async throws -> [GarmentDTO] { try decode(await request("GET", "garments")) }
     func outfits() async throws -> [OutfitDTO] { try decode(await request("GET", "outfits")) }
+    func deleteOutfit(_ id: String) async throws { _ = try await request("DELETE", "outfits/\(id)") }
     func createOutfit(name: String, avatarId: String?, items: [OutfitItemIn]) async throws -> OutfitDTO {
         let encodedItems = items.map { item -> [String: Any] in
             var d: [String: Any] = ["garment_id": item.garmentId, "layer_index": item.layerIndex]

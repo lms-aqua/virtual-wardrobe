@@ -128,9 +128,18 @@ struct OutfitItemIn: Codable {
     }
 }
 
+struct OutfitItemDTO: Codable {
+    let garmentId: String
+    let layerIndex: Int
+    enum CodingKeys: String, CodingKey {
+        case garmentId = "garment_id"; case layerIndex = "layer_index"
+    }
+}
+
 struct OutfitDTO: Codable, Identifiable {
     let id: String
     let name: String
+    let items: [OutfitItemDTO]
 }
 
 enum ScanView: String, CaseIterable, Identifiable {
