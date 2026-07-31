@@ -4,10 +4,14 @@
 **Permanent tag:** `v2.0.0` → commit `81e75d8` · **Moving pointer:** `ios-latest`
 **Marketing version:** 2.0.0 · **iOS build number:** 19 (from `github.run_number`)
 
-> The tag sits at `81e75d8`, the commit the .ipa was built from. Later commits on
-> `main` change only workflows, the manifest and documentation — `git diff
-> 81e75d8..HEAD -- apps/ios/VirtualWardrobe apps/api/wardrobe_core apps/web/src`
-> is empty, so the published binary matches current application source.
+> The tag sits at `81e75d8`, the commit the .ipa was built from.
+> **iOS application source has not changed since the tag** — `git diff
+> 81e75d8..HEAD -- apps/ios/VirtualWardrobe` is empty, so the published binary
+> matches current iOS source and no rebuild is owed.
+>
+> The backend and web app *have* moved past the tag (see "Post-tag work" below).
+> They ship by deployment rather than through the AltStore manifest, so this does
+> not invalidate the published `.ipa`.
 
 Single source of truth for the version is `apps/ios/altstore-source.json`; the iOS
 workflow reads it and stamps `CFBundleShortVersionString` from it, so the manifest
@@ -69,6 +73,45 @@ and the binary cannot drift apart.
 
 ---
 
+## Post-tag work (backend + web, deployed separately)
+
+Landed after `81e75d8`. None of it touches the iOS binary.
+
+### Fixed — web
+- **A server fault signed users out.** The dashboard ran `auth.clear()` and
+  redirected to `/login` on *any* rejected request, so a transient 500 or a
+  dropped connection destroyed the session. Only 401/403 does that now;
+  everything else renders a retryable error state.
+- **Raw backend errors reached the interface.** The login page rendered
+  `String(e)`, which carried the HTTP status and the response body onto the page.
+  The client now raises a typed `ApiError` whose `message` is diagnostic-only and
+  whose `userMessage` is the sole display string.
+- **Network rejections were unhandled.** `fetch()` failures (offline, DNS, CORS)
+  surfaced as an unhandled `TypeError`; they are now `ApiError(0)`.
+
+### Improved — web
+- Loading is a skeleton that preserves page structure instead of the word
+  "Loading…"; empty states added for "no avatar yet" and "no garments yet"
+  (an empty wardrobe previously rendered a bare empty grid).
+- Measurements carry their unit (`cm`); they were unlabelled numbers.
+- Terminology aligned with iOS — Avatar, Body Scan, Measurements, Wardrobe, and
+  a status pill reading Processing / Ready / Failed.
+
+### Fixed — API
+- **`/health/ready` returned 200 when degraded.** Orchestrators and load
+  balancers read 200 as healthy, so an instance that had lost its database kept
+  receiving traffic. It now returns **503** with the same diagnostic body.
+
+### Improved — API
+- Version metadata was stale at 0.1.0 on both the backend and the web package.
+  `pyproject.toml` is now the single source of truth: `wardrobe_core.__version__`
+  reads installed package metadata and falls back to a literal only in an
+  uninstalled source checkout. Both paths resolve to 2.0.0.
+- Backend suite grew 18 → **21 tests** (readiness healthy, readiness degraded,
+  version consistency).
+
+---
+
 ## Verification results
 
 | Surface | Check | Result |
@@ -76,12 +119,13 @@ and the binary cannot drift apart.
 | iOS | Swift compile (Xcode 26.6, Swift 6.3.3, iPhoneOS26.5 SDK) | ✅ `BUILD SUCCEEDED` |
 | iOS | GitHub Actions iOS workflow | ✅ green |
 | iOS | Unsigned `.ipa` export + release upload | ✅ 952,894 bytes |
-| Backend | `pytest` | ✅ 18 passed |
+| Backend | `pytest` | ✅ 21 passed |
 | Backend | `ruff check` | ✅ clean |
 | Backend | `ruff format --check` | ⚠️ 20 files would reformat (not CI-gated — see limitations) |
 | Web | `npm ci` (locked versions) | ✅ |
 | Web | `tsc --noEmit` | ✅ clean |
 | Web | `next build` (production) | ✅ 4 routes generated |
+| Web | server-rendered output inspected in a browser | ✅ `/login` + `/dashboard` 200, no console or server errors |
 | Manifest | JSON parse, 8 entries, no duplicates, all HTTPS | ✅ |
 | Workflows | YAML parse (`ios.yml`, `ci.yml`) | ✅ |
 | Release | `v2.0.0` download URL | ✅ HTTP 200 |
@@ -90,8 +134,11 @@ and the binary cannot drift apart.
 ### Verification level — stated precisely
 
 - **Compiled:** all iOS code, against the real iOS 26 SDK.
-- **Automated-test verified:** backend only (18 tests). There are no iOS unit or UI
-  tests configured in this project.
+- **Automated-test verified:** backend only (21 tests). There are no iOS unit or UI
+  tests configured in this project, and the web app's `test` script is just `tsc`.
+- **Browser verified:** web **server-rendered output only** — `/login` and `/dashboard`
+  return 200 with the expected structure, and neither the server nor the console
+  reports an error.
 - **Simulator verified:** ❌ not performed.
 - **Screenshot reviewed:** ❌ not performed.
 - **Physical-device verified:** ❌ not performed.
@@ -99,6 +146,13 @@ and the binary cannot drift apart.
 No macOS or iOS Simulator is available in the development environment, so every iOS
 claim in this document is a compile/CI claim. The SwiftUI previews added in this
 release can only be rendered on a Mac and have not been visually inspected.
+
+**The web fixes above are not interactively verified.** React does not hydrate in this
+environment's preview sandbox — confirmed directly: rendered nodes carry no React
+internal keys, and controlled inputs never update state. Server-rendered markup was
+checked, but the retry path, the 401-versus-500 branch and the login error message
+were reasoned about and type-checked, not exercised in a running client. They need a
+pass on a real deployment before being trusted.
 
 ---
 
