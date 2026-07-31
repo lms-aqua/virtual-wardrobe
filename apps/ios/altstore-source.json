@@ -40,7 +40,7 @@
           "version": "1.3.0",
           "date": "2026-07-31T01:00:00-04:00",
           "localizedDescription": "🪞 Virtual Wardrobe 1.3 — try it on you\n\n✨ AR MAGIC MIRROR (beta)\nSee garments overlaid on your own body, live in the camera, with ARKit body tracking.\n\n🧵 FABRIC TEXTURES + BETTER CLOTHES\nDenim, stripes, plaid and knit patterns, plus sleeves — clothes look like fabric now, not flat colour.\n\n📷 REAL PROPORTIONS FROM A PHOTO\nMeasure from a single full-body photo using on-device Vision body-pose + your height.\n\n🛍️ SHOP\nBrowse the catalog with prices, your recommended size, and Buy links.\n\n⭐ FAVORITES\nStar your best outfits; favourites sort to the top.\n\n🎞️ EXPORT A SPIN VIDEO\nRender and share a spinning clip of your dressed avatar.\n\nStill a stylized, measurement-based preview — full body reconstruction and cloth simulation are the road ahead.",
-          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v1.3.0/VirtualWardrobe-unsigned.ipa",
           "size": 475725,
           "minOSVersion": "17.0"
         },
@@ -48,7 +48,7 @@
           "version": "1.2.0",
           "date": "2026-07-31T00:00:00-04:00",
           "localizedDescription": "🚀 Virtual Wardrobe 1.2 — your realest avatar yet\n\n📐 AR BODY MEASURE (beta)\nOn supported iPhones, point the camera at yourself and capture REAL measurements — height, shoulders, arm & leg length — straight from ARKit body tracking.\n\n🧍 A MORE LIFELIKE AVATAR\nSmoother body, hair, and skin tones. New Customize screen to pick your skin tone and body build.\n\n🖼️ SCAN FROM PHOTOS\nNo room to spin? Import full-body photos from your library instead of a live scan.\n\n📏 SIZE RECOMMENDATIONS\nPick a garment and see your suggested size and fit (snug / true to size / relaxed).\n\n➕ ADD YOUR OWN CLOTHES\nCreate a garment by type and colour and try it on in 3D.\n\n🆚 COMPARE OUTFITS\nView two saved looks side-by-side on your avatar.\n\nNote: circumferences (chest/waist/hip) are still estimated — full body reconstruction and cloth simulation are still ahead.",
-          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v1.2.0/VirtualWardrobe-unsigned.ipa",
           "size": 475725,
           "minOSVersion": "17.0"
         },
@@ -56,7 +56,7 @@
           "version": "1.1.0",
           "date": "2026-07-30T23:00:00-04:00",
           "localizedDescription": "🎬 Virtual Wardrobe 1.1 — more of everything\n\n🔄 ROTATE & POSE YOUR AVATAR\nNew Front / Side / Back camera presets in the 3D try-on, and share a snapshot of your look.\n\n🧥 FILTER THE CLOSET\nBrowse clothes by category — Tops, Dresses, Bottoms, Outerwear, Shoes.\n\n💾 MANAGE YOUR OUTFITS\nA new Saved Outfits screen — reopen any look in 3D or swipe to delete.\n\n⚙️ A REAL SETTINGS HUB\nUnits (cm / inches), server, data & privacy controls, how-scanning-works, and about — all in one place.\n\n👋 GUIDED ONBOARDING\nA quick walkthrough the first time you open the app.\n\nPlus polish throughout. Still a measurement-based 3D preview — LiDAR body scanning and true cloth simulation are next.",
-          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v1.1.0/VirtualWardrobe-unsigned.ipa",
           "size": 475725,
           "minOSVersion": "17.0"
         },
@@ -64,7 +64,7 @@
           "version": "1.0.0",
           "date": "2026-07-30T22:00:00-04:00",
           "localizedDescription": "✨ Virtual Wardrobe 1.0 — the first full release\n\n👗 TRY ON CLOTHES IN 3D\nA real, rotatable 3D avatar built from your body measurements. Drag to spin, pinch to zoom. Tap garments to dress it and watch outfits layer on live.\n\n📸 FASTER, SMOOTHER SCANNING\nThe 360° body scan now compresses and uploads frames in parallel — noticeably quicker. Front camera by default with a one-tap flip.\n\n📏 EDIT YOUR MEASUREMENTS\nFine-tune height, chest, waist, hip and inseam — your 3D avatar updates to match.\n\n💾 SAVE & COMPARE OUTFITS\nBuild looks and save them to your wardrobe, synced to your account.\n\n🔒 PRIVATE BY DESIGN\nAdults-only consent, private storage, no face recognition, one-tap delete.\n\nNote: the avatar is a measurement-based 3D preview — realistic body scanning (LiDAR / photogrammetry) and true cloth simulation are coming next.",
-          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v1.0.0/VirtualWardrobe-unsigned.ipa",
           "size": 411466,
           "minOSVersion": "17.0"
         },
@@ -72,7 +72,7 @@
           "version": "0.1.2",
           "date": "2026-07-30T21:30:00-04:00",
           "localizedDescription": "What's new in 0.1.2:\n• Camera now defaults to the front (selfie) camera so you can see yourself\n• Tap the Front/Back button to switch cameras for other framing",
-          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v0.1.2/VirtualWardrobe-unsigned.ipa",
           "size": 411466,
           "minOSVersion": "17.0"
         },
@@ -80,7 +80,7 @@
           "version": "0.1.1",
           "date": "2026-07-30T21:00:00-04:00",
           "localizedDescription": "What's new in 0.1.1:\n• 360° multi-frame body capture (replaces the 4-photo flow) with a live progress ring — turn slowly and it grabs ~24 frames\n• Connects to the live backend by default (wardrobe-api.losthosting.com) — no server setup needed\n• New app icon\n• Backend now accepts many frames per scan",
-          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v0.1.1/VirtualWardrobe-unsigned.ipa",
           "size": 411466,
           "minOSVersion": "17.0"
         }
