@@ -1,8 +1,13 @@
 # Virtual Wardrobe v2.0.0 — release record
 
 **Release date:** 2026-07-31
-**Permanent tag:** `v2.0.0` · **Moving pointer:** `ios-latest`
+**Permanent tag:** `v2.0.0` → commit `81e75d8` · **Moving pointer:** `ios-latest`
 **Marketing version:** 2.0.0 · **iOS build number:** 19 (from `github.run_number`)
+
+> The tag sits at `81e75d8`, the commit the .ipa was built from. Later commits on
+> `main` change only workflows, the manifest and documentation — `git diff
+> 81e75d8..HEAD -- apps/ios/VirtualWardrobe apps/api/wardrobe_core apps/web/src`
+> is empty, so the published binary matches current application source.
 
 Single source of truth for the version is `apps/ios/altstore-source.json`; the iOS
 workflow reads it and stamps `CFBundleShortVersionString` from it, so the manifest
