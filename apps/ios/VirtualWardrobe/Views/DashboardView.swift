@@ -7,6 +7,8 @@ struct DashboardView: View {
         TabView {
             HomeView()
                 .tabItem { Label("Home", systemImage: "house.fill") }
+            WardrobeView()
+                .tabItem { Label("Wardrobe", systemImage: "tshirt.fill") }
             NavigationStack { OutfitBuilderView() }
                 .tabItem { Label("Try On", systemImage: "cube.transparent.fill") }
             AccountView()
