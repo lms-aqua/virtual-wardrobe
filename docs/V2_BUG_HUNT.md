@@ -280,9 +280,31 @@ adds `isAuthFailure`, which is what makes BUG-010 fixable.
 
 | Pass | Scope | Result |
 |---|---|---|
-| 1 | Build and compiler defects | iOS compiles clean on Xcode 26.6; workflows parse; no target-membership or availability errors |
-| 3 | API and data defects | BUG-001, BUG-002, BUG-003 found and fixed |
-| 6 | Security and privacy | BUG-001 (cross-user reference) found and fixed |
+| 1 | Build and compiler defects | iOS compiles clean on Xcode 26.6 / Swift 6.3.3; both workflow YAMLs parse; no target-membership or availability errors |
+| 2 | Crash and state defects | Force-unwrap sweep: one `as!` remains (`CameraPreview`), safe by construction via `layerClass`. Concurrency: BUG-007 spin loop found and fixed; `Task.isCancelled` was absent everywhere outside `ImageCache` |
+| 3 | API and data defects | BUG-001, BUG-002, BUG-003 |
+| 4 | Processing defects | BUG-006, BUG-007 (unbounded retry, no terminal transport-failure state); `PhotoImportView` variant logged as BUG-012 |
+| 5 | UI and accessibility | Fixed-size icons ignoring Dynamic Type fixed in v2.5; failure copy no longer blames scan quality for a network fault |
+| 6 | Security and privacy | BUG-001 cross-account reference; BUG-011 raw backend body reaching the UI; token confirmed in Keychain, not UserDefaults; no secrets committed |
+| 7 | Full regression | Backend 24/24, ruff clean, web typecheck + production build, container builds, iOS compile — all green on the release commit |
 
-Remaining passes and their findings are recorded in the sections above as they
-complete.
+## Release status
+
+**Release candidate.**
+
+- No known P0 defect. Two P1s found (BUG-006, BUG-007) — both fixed and CI verified.
+- All required CI workflows green on `954deff`: API, Web, Containers, iOS.
+- Backend 24 tests pass, including three new user-isolation and validation
+  regressions that failed before their fixes.
+- Foreign keys are enforced in every environment for the first time.
+- Nine prior manifest entries and every prior release verified unchanged.
+
+Not *ready for publication* in the strict sense the directive defines, for one
+honest reason: **no iOS runtime verification of any kind has been performed.** There
+is no macOS or Simulator in this environment and no iOS test target exists, so every
+iOS fix here is compile-and-reasoning verified, not executed. BUG-006 through BUG-011
+were found by reading code and confirmed by inspection rather than by running the app.
+
+> No known release-blocking defect remains after the completed test coverage —
+> where that coverage is: backend automated tests, static analysis, container builds,
+> and iOS compilation. It does not include iOS runtime behaviour.
