@@ -10,6 +10,7 @@ dependencies = [
     "pydantic-settings>=2.5.0",
     "sqlalchemy[asyncio]>=2.0.34",
     "asyncpg>=0.29.0",
+    "psycopg2-binary>=2.9",  # sync driver used by Alembic migrations
     "alembic>=1.13.2",
     "redis>=5.0.8",
     "dramatiq[redis]>=1.17.0",

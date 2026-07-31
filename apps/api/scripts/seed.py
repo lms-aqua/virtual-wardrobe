@@ -28,7 +28,7 @@ SAMPLE = [
     ("Sample", "Sneakers", GarmentCategory.footwear, 5, {}, 8500),
 ]
 SIZES = ["S", "M", "L"]
-ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@virtualwardrobe.local").lower()
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@virtualwardrobe.app").lower()
 
 
 async def main() -> None:
