@@ -14,12 +14,20 @@
       "iconURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/icon.png",
       "tintColor": "6D5EFC",
       "category": "lifestyle",
-      "version": "2.0.0",
-      "versionDate": "2026-07-31T05:00:00-04:00",
-      "versionDescription": "A rebuilt, Apple-quality interface: new design system, Liquid Glass controls, a redesigned image-first Wardrobe, and full Dynamic Type / VoiceOver / Reduce Transparency support.",
-      "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v2.0.0/VirtualWardrobe-unsigned.ipa",
+      "version": "2.5.0",
+      "versionDate": "2026-07-31T15:30:00-04:00",
+      "versionDescription": "Light mode across the app, cached garment images that work offline, outfit duplication, and fixes to Saved Outfits error handling and onboarding.",
+      "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v2.5.0/VirtualWardrobe-unsigned.ipa",
       "size": 952894,
       "versions": [
+        {
+          "version": "2.5.0",
+          "date": "2026-07-31T15:30:00-04:00",
+          "localizedDescription": "🎨 Virtual Wardrobe 2.5 — light mode, and it remembers\n\n☀️ LIGHT MODE\nThe app was locked to dark. Every screen now follows your system appearance, using Apple's semantic colours — so it also respects Increased Contrast and your accent tint. The camera capture flow stays dark on purpose.\n\n⚡ FASTER, AND IT WORKS OFFLINE\nGarment images are cached, so scrolling your wardrobe no longer re-downloads the same pictures — and garments you've already seen still show up with no connection.\n\n📋 DUPLICATE AN OUTFIT\nSwipe or long-press any saved outfit to copy it. The copy is independent, so you can change it without touching the original.\n\n🔧 FIXES\nSaved Outfits showed \"No saved outfits yet\" when the network failed, and a delete that failed silently came back on refresh — both now say what happened and let you retry. Onboarding gained a Skip button, and icons that previously ignored your text size now scale with it.\n\nThe avatar is still a stylized, measurement-based preview.",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v2.5.0/VirtualWardrobe-unsigned.ipa",
+          "size": 952894,
+          "minOSVersion": "17.0"
+        },
         {
           "version": "2.0.0",
           "date": "2026-07-31T05:00:00-04:00",
