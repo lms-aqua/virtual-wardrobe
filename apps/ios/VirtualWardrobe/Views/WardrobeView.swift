@@ -1,8 +1,11 @@
 import SwiftUI
 
-/// Production Wardrobe screen — the garments available to your 3D try-on. Real
-/// data from the garment API + your local custom garments. Image-focused grid
-/// with native search, category filtering, and full loading/empty/error states.
+/// Production Wardrobe screen — the garments available to your 3D try-on.
+///
+/// Real data from the garment API plus your local custom garments. The grid is
+/// the subject: filters are a single compact row, the primary action floats in
+/// reach at the bottom, and the toolbar stays empty so the large title and the
+/// garments carry the screen.
 struct WardrobeView: View {
     @EnvironmentObject var session: AuthStore
 
@@ -10,106 +13,189 @@ struct WardrobeView: View {
     @State private var query = ""
     @State private var category: String? = nil          // nil = All
     @State private var showAdd = false
+    @State private var favorites: Set<String> = Favorites.ids
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let categories = ["top", "dress", "bottom", "outerwear", "footwear"]
-    private let columns = [GridItem(.adaptive(minimum: 150), spacing: DS.Space.l)]
+
+    /// Two columns normally; a single column once text is at accessibility
+    /// sizes, where a side-by-side grid would crush garment names.
+    private var columns: [GridItem] {
+        dynamicTypeSize.isAccessibilitySize
+            ? [GridItem(.flexible(), spacing: DS.Space.l)]
+            : [GridItem(.adaptive(minimum: 150, maximum: 240), spacing: DS.Space.l)]
+    }
 
     var body: some View {
         NavigationStack {
             content
                 .navigationTitle("Wardrobe")
                 .background(DS.Color.grouped)
-                .toolbar { toolbar }
                 .searchable(text: $query, prompt: "Search garments")
+                .safeAreaInset(edge: .bottom) { floatingAdd }
                 .task { if case .idle = state { await load() } }
                 .refreshable { await load() }
-                .sheet(isPresented: $showAdd) { AddGarmentView { Task { await load() } } }
+                .sheet(isPresented: $showAdd) {
+                    AddGarmentView {
+                        Task {
+                            await load()
+                            DS.Haptic.success()
+                        }
+                    }
+                }
         }
     }
 
     // MARK: content by state
+
     @ViewBuilder private var content: some View {
         switch state {
         case .idle, .loading:
-            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+            skeleton
         case .failed(let message):
-            DSErrorState(message: message, retry: { Task { await load() } })
+            DSErrorState(
+                title: "Garments Couldn’t Load",
+                message: message,
+                systemImage: "wifi.exclamationmark",
+                retry: { Task { await load() } }
+            )
         case .empty:
             emptyWardrobe
         case .loaded(let all):
             let items = filtered(all)
-            if items.isEmpty {
-                noResults
-            } else {
-                grid(items)
+            VStack(spacing: 0) {
+                filterRow
+                if items.isEmpty { noResults } else { grid(items) }
             }
         }
+    }
+
+    /// Initial load keeps the screen's structure instead of blanking to a
+    /// spinner, so the layout doesn't jump when real garments arrive.
+    private var skeleton: some View {
+        ScrollView {
+            LazyVGrid(columns: columns, spacing: DS.Space.xl) {
+                ForEach(0..<6, id: \.self) { _ in DSGarmentSkeletonCell() }
+            }
+            .padding(DS.Space.screenMargin)
+        }
+        .disabled(true)
+        .accessibilityLabel("Loading your wardrobe")
     }
 
     private func grid(_ items: [GarmentDTO]) -> some View {
         ScrollView {
-            if category != nil { activeFilterBar }
             LazyVGrid(columns: columns, spacing: DS.Space.xl) {
                 ForEach(items) { g in
                     NavigationLink { GarmentDetailView(garment: g) } label: {
-                        WardrobeItemCell(garment: g)
+                        WardrobeItemCell(garment: g, isFavorite: favorites.contains(g.id))
                     }
                     .buttonStyle(.plain)
+                    .contextMenu { menu(for: g) }
                 }
             }
-            .padding(DS.Space.l)
+            .padding(DS.Space.screenMargin)
+            .animation(DS.Motion.adaptive(DS.Motion.content, reduceMotion: reduceMotion),
+                       value: items.count)
         }
     }
 
-    private var activeFilterBar: some View {
-        HStack {
-            Text("\(category?.capitalized ?? "")").dsText(.itemMeta)
-            Spacer()
-            Button("Clear") { category = nil }.font(.subheadline).foregroundStyle(DS.Color.accent)
+    /// Secondary actions live in the long-press menu, keeping the cells clean.
+    @ViewBuilder private func menu(for g: GarmentDTO) -> some View {
+        Button {
+            Favorites.toggle(g.id)
+            favorites = Favorites.ids
+            DS.Haptic.selection()
+        } label: {
+            Label(favorites.contains(g.id) ? "Remove from Favorites" : "Favorite",
+                  systemImage: favorites.contains(g.id) ? "heart.slash" : "heart")
         }
-        .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.m)
+
+        if CustomGarments.isCustom(g.id) {
+            Button(role: .destructive) {
+                CustomGarments.remove(id: g.id)
+                Task { await load() }
+            } label: {
+                Label("Delete Garment", systemImage: "trash")
+            }
+        }
     }
+
+    // MARK: filters — one compact row, with "All" as the direct reset
+
+    private var filterRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DS.Space.s) {
+                DSFilterChip(title: "All", isActive: category == nil) {
+                    setCategory(nil)
+                }
+                ForEach(categories, id: \.self) { c in
+                    DSFilterChip(title: c.capitalized, isActive: category == c) {
+                        setCategory(category == c ? nil : c)
+                    }
+                }
+            }
+            .padding(.horizontal, DS.Space.screenMargin)
+            .padding(.vertical, DS.Space.s)
+        }
+        .scrollClipDisabled()
+    }
+
+    private func setCategory(_ c: String?) {
+        withAnimation(DS.Motion.adaptive(DS.Motion.quick, reduceMotion: reduceMotion)) {
+            category = c
+        }
+        DS.Haptic.selection()
+    }
+
+    // MARK: primary action
+
+    private var floatingAdd: some View {
+        DSFloatingActionControl(title: "Add Garment", systemImage: "plus") {
+            showAdd = true
+        }
+        .padding(.bottom, DS.Space.m)
+    }
+
+    // MARK: states
 
     private var emptyWardrobe: some View {
         DSEmptyState(
-            title: "Your wardrobe is empty",
+            title: "Your Wardrobe Is Ready",
             systemImage: "tshirt",
-            message: "Add a garment to start building outfits on your avatar.",
-            actionTitle: "Add clothing",
+            message: "Add your first garment to begin creating outfits and virtual try-ons.",
+            actionTitle: "Add Garment",
             action: { showAdd = true }
         )
     }
 
     private var noResults: some View {
         DSEmptyState(
-            title: "No matches",
+            title: "No Matches",
             systemImage: "magnifyingglass",
-            message: query.isEmpty ? "No garments in this category." : "No garments match “\(query)”."
+            message: query.isEmpty
+                ? "No garments in this category yet."
+                : "No garments match “\(query)”.",
+            actionTitle: resetTitle,
+            action: resetAction
         )
+        .frame(maxHeight: .infinity)
     }
 
-    // MARK: toolbar
-    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Menu {
-                Picker("Category", selection: $category) {
-                    Text("All Categories").tag(String?.none)
-                    ForEach(categories, id: \.self) { c in
-                        Text(c.capitalized).tag(String?.some(c))
-                    }
-                }
-            } label: {
-                Label("Filter", systemImage: category == nil
-                      ? "line.3.horizontal.decrease.circle"
-                      : "line.3.horizontal.decrease.circle.fill")
-            }
-        }
-        ToolbarItem(placement: .topBarTrailing) {
-            Button { showAdd = true } label: { Label("Add", systemImage: "plus") }
-        }
+    // Split out so the optionals have an unambiguous type for the compiler.
+    private var resetTitle: String? {
+        category == nil ? nil : "Reset Filters"
+    }
+
+    private var resetAction: (() -> Void)? {
+        guard category != nil else { return nil }
+        return { setCategory(nil) }
     }
 
     // MARK: data
+
     private func filtered(_ all: [GarmentDTO]) -> [GarmentDTO] {
         all.filter { g in
             (category == nil || g.category.lowercased() == category) && matchesQuery(g)
@@ -130,8 +216,9 @@ struct WardrobeView: View {
             let catalog = try await session.api.garments()
             let combined = catalog + CustomGarments.all.map { CustomGarments.asGarment($0) }
             state = combined.isEmpty ? .empty : .loaded(combined)
+            favorites = Favorites.ids
         } catch {
-            state = .failed("We couldn't load your wardrobe. Pull to refresh to try again.")
+            state = .failed("Your wardrobe is still safe. Check your connection and try again.")
         }
     }
 }

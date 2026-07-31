@@ -1,65 +1,104 @@
 import SwiftUI
 
-/// Reusable garment cell for the Wardrobe grid. Image-focused, calm, and
-/// accessible. Uses the real garment's thumbnail when present, otherwise a
-/// neutral tinted backdrop + category symbol (the catalog has no photos yet).
+/// Reusable garment cell for the Wardrobe grid.
+///
+/// The garment image is the subject; everything else is quiet support. Uses the
+/// real thumbnail when present, otherwise a neutral backdrop + category symbol
+/// tinted from the garment's own appearance (the catalog has no photos yet).
 struct WardrobeItemCell: View {
     let garment: GarmentDTO
+    var isFavorite: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Space.s) {
-            ZStack {
-                RoundedRectangle(cornerRadius: DS.Radius.thumb, style: .continuous)
-                    .fill(DS.Color.imageBackdrop)
-                if let s = garment.thumbUrl, let url = URL(string: s) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let img):
-                            img.resizable().scaledToFit().padding(DS.Space.m)
-                        case .failure:
-                            placeholder
-                        default:
-                            ProgressView()
-                        }
-                    }
-                } else {
-                    placeholder
-                }
-                if CustomGarments.isCustom(garment.id) {
-                    badge("Yours")
-                }
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.thumb, style: .continuous))
-
-            Text(garment.name).dsText(.itemTitle).lineLimit(1)
-            Text(displayCategory).dsText(.itemMeta).lineLimit(1)
+            thumbnail
+            Text(garment.name)
+                .dsText(.itemTitle)
+                .lineLimit(2)                       // names wrap rather than truncate
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(displayCategory)
+                .dsText(.itemMeta)
+                .lineLimit(1)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
         .accessibilityAddTraits(.isButton)
     }
 
-    private var placeholder: some View {
+    // MARK: image
+
+    private var thumbnail: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
+                .fill(DS.Color.imageBackdrop)
+
+            if let s = garment.thumbUrl, let url = URL(string: s) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let img):
+                        img.resizable().scaledToFit().padding(DS.Space.m)
+                    case .failure:
+                        symbolPlaceholder
+                    default:
+                        // Static fill, not a spinner — a grid of independently
+                        // animating placeholders reads as noise.
+                        DS.Color.skeleton
+                    }
+                }
+            } else {
+                symbolPlaceholder
+            }
+
+            if let badge = badgeStatus {
+                overlayTopTrailing { DSProcessingBadge(status: badge) }
+            }
+            if isFavorite {
+                overlayTopLeading {
+                    Image(systemName: "heart.fill")
+                        .font(.footnote)
+                        .foregroundStyle(DS.Color.favorite)
+                        .padding(DS.Space.xs)
+                        .background(.thinMaterial, in: Circle())
+                }
+            }
+        }
+        .aspectRatio(DS.Ratio.garment, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous))
+    }
+
+    private var symbolPlaceholder: some View {
         ZStack {
             GarmentAppearance.of(garment).color.opacity(0.22)
             Image(systemName: symbol)
-                .font(.system(size: 40))
+                .font(.largeTitle)                  // scales with Dynamic Type
                 .foregroundStyle(GarmentAppearance.of(garment).color)
         }
     }
 
-    private func badge(_ text: String) -> some View {
+    // MARK: overlays
+
+    private func overlayTopTrailing<V: View>(@ViewBuilder _ content: () -> V) -> some View {
         VStack {
-            HStack {
-                Spacer()
-                Text(text).font(.caption2.bold()).foregroundStyle(.white)
-                    .padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xxs)
-                    .background(DS.Color.accent, in: Capsule())
-                    .padding(DS.Space.s)
-            }
+            HStack { Spacer(); content() }
             Spacer()
         }
+        .padding(DS.Space.s)
+    }
+
+    private func overlayTopLeading<V: View>(@ViewBuilder _ content: () -> V) -> some View {
+        VStack {
+            HStack { content(); Spacer() }
+            Spacer()
+        }
+        .padding(DS.Space.s)
+    }
+
+    // MARK: derived
+
+    /// At most one badge per cell — stacking indicators clutters the grid.
+    private var badgeStatus: DSProcessingBadge.Status? {
+        CustomGarments.isCustom(garment.id) ? .custom : nil
     }
 
     private var symbol: String {
@@ -79,6 +118,7 @@ struct WardrobeItemCell: View {
         if CustomGarments.isCustom(garment.id) { parts.append("your own garment") }
         else if garment.brand != garment.name { parts.append("by \(garment.brand)") }
         if let p = garment.priceText { parts.append(p) }
+        if isFavorite { parts.append("favorite") }
         return parts.joined(separator: ", ")
     }
 }
