@@ -18,14 +18,14 @@
       "versionDate": "2026-07-31T21:05:00-04:00",
       "versionDescription": "Fixes the Wardrobe filter chips drawing over the grid, unreadable garment placeholders, and the Add button colliding with the tab bar.",
       "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v3.0.1/VirtualWardrobe-unsigned.ipa",
-      "size": 980605,
+      "size": 984573,
       "versions": [
         {
           "version": "3.0.1",
           "date": "2026-07-31T21:05:00-04:00",
           "localizedDescription": "🔧 Virtual Wardrobe 3.0.1 — Wardrobe layout fixes\n\nFixes reported from a real device:\n\n• The category filter chips were drawing on top of the garment grid, covering the labels under the first row. They now stay in their own row.\n\n• Garments showed as flat coloured blocks. The catalog has no photos yet, so each tile falls back to a category symbol — that symbol is now large enough to read, and the icons are right: outerwear was showing a wind/breeze glyph and bottoms a walking figure.\n\n• The floating Add Garment button collided with the tab bar and covered the last row of clothes. Add now lives in the top-right of the navigation bar.",
           "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/v3.0.1/VirtualWardrobe-unsigned.ipa",
-          "size": 980605,
+          "size": 984573,
           "minOSVersion": "17.0"
         },
         {
