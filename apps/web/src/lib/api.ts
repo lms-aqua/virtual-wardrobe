@@ -20,15 +20,56 @@ export const auth = {
   },
 };
 
+/**
+ * A failed API call. Carries the status so callers can tell an expired session
+ * apart from a server fault — previously every failure was treated as an auth
+ * failure, which signed people out on a transient 500.
+ *
+ * `message` is diagnostic and deliberately excludes the response body: backend
+ * exception text must never reach the interface. Render `userMessage` instead.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+
+  /** True when the session is gone and the user has to sign in again. */
+  get isAuthFailure(): boolean {
+    return this.status === 401 || this.status === 403;
+  }
+
+  /** Safe to display. Never contains transport or backend detail. */
+  get userMessage(): string {
+    if (this.status === 0) return "Can’t reach the server. Check your connection and try again.";
+    if (this.isAuthFailure) return "Your session has expired. Sign in again.";
+    if (this.status === 404) return "That’s no longer available.";
+    if (this.status === 429) return "Too many attempts. Wait a moment and try again.";
+    if (this.status >= 500) return "The server is having trouble. Try again shortly.";
+    return "Something went wrong. Try again.";
+  }
+}
+
 async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (auth.token) headers.Authorization = `Bearer ${auth.token}`;
-  const res = await fetch(`${API_BASE_URL}/${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}/${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    // Offline, DNS failure, CORS rejection — no status to report.
+    throw new ApiError(0, `${method} ${path} → network failure`);
+  }
+
+  if (!res.ok) throw new ApiError(res.status, `${method} ${path} → ${res.status}`);
   return (res.status === 204 ? undefined : await res.json()) as T;
 }
 

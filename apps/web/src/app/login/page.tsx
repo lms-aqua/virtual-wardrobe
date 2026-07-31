@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, auth } from "@/lib/api";
+import { ApiError, api, auth } from "@/lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,7 +24,9 @@ export default function LoginPage() {
         setMsg("Check your email for a sign-in link.");
       }
     } catch (e) {
-      setMsg(String(e));
+      // Never render the raw error: it carried the HTTP status and the backend
+      // response body straight into the page.
+      setMsg(e instanceof ApiError ? e.userMessage : "Something went wrong. Try again.");
     } finally {
       setBusy(false);
     }
