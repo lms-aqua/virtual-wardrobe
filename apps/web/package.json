@@ -10,9 +10,12 @@
     "test": "echo \"web unit tests added in Phase 5\" && exit 0"
   },
   "dependencies": {
+    "@react-three/drei": "^10.0.0",
+    "@react-three/fiber": "^9.0.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "three": "^0.169.0"
   },
   "devDependencies": {
     "@types/node": "^22.5.5",

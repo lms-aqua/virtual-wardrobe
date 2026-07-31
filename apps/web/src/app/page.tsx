@@ -43,16 +43,16 @@ export default function LandingPage() {
 
       <nav className="flex flex-wrap gap-4" aria-label="Get started">
         <Link
-          href="/how-scanning-works"
-          className="rounded-lg border border-current px-5 py-3 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          How scanning works
-        </Link>
-        <Link
-          href="/privacy"
+          href="/login"
           className="rounded-lg bg-brand px-5 py-3 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          Read the privacy promise
+          Sign in
+        </Link>
+        <Link
+          href="/dashboard"
+          className="rounded-lg border border-current px-5 py-3 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          Open my avatar
         </Link>
       </nav>
 

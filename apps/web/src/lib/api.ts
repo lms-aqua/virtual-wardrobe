@@ -1,22 +1,67 @@
 /**
- * Minimal typed API client. In Phase 3 this is replaced/extended by a client
- * generated from the backend OpenAPI spec (single source of truth) plus Zod
- * response validation at the boundary. Credentials are included so the secure,
- * httpOnly session cookie flows automatically.
+ * Browser API client. Uses a bearer token stored in localStorage (the API also
+ * sets an httpOnly cookie, but bearer keeps cross-origin dev simple).
  */
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://wardrobe-api.losthosting.com";
 
-export type LiveHealth = { status: string; version: string };
+const TOKEN_KEY = "vw.token";
 
-export async function getLiveHealth(): Promise<LiveHealth> {
-  const res = await fetch(`${API_BASE_URL}/health/live`, {
-    credentials: "include",
-    cache: "no-store",
+export const auth = {
+  get token(): string | null {
+    return typeof window === "undefined" ? null : localStorage.getItem(TOKEN_KEY);
+  },
+  set(token: string) {
+    localStorage.setItem(TOKEN_KEY, token);
+  },
+  clear() {
+    localStorage.removeItem(TOKEN_KEY);
+  },
+};
+
+async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (auth.token) headers.Authorization = `Bearer ${auth.token}`;
+  const res = await fetch(`${API_BASE_URL}/${path}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) {
-    throw new Error(`Health check failed: ${res.status}`);
-  }
-  return (await res.json()) as LiveHealth;
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  return (res.status === 204 ? undefined : await res.json()) as T;
 }
+
+export interface Measurement {
+  height_cm?: number | null;
+  chest_cm?: number | null;
+  waist_cm?: number | null;
+  hip_cm?: number | null;
+}
+export interface Avatar {
+  id: string;
+  status: string;
+  confidence: number | null;
+  mesh_url: string | null;
+  thumb_url: string | null;
+  is_mock: boolean;
+  measurements: Measurement | null;
+}
+export interface Garment {
+  id: string;
+  brand: string;
+  name: string;
+  category: string;
+  price_cents: number | null;
+  product_url: string | null;
+}
+
+export const api = {
+  requestMagicLink: (email: string, is_adult: boolean) =>
+    req<{ sent: boolean; dev_token: string | null }>("POST", "auth/magic-link", { email, is_adult }),
+  verify: (token: string) =>
+    req<{ access_token: string; user_id: string }>("POST", "auth/magic-link/verify", { token }),
+  me: () => req<{ id: string; email: string }>("GET", "me"),
+  avatars: () => req<Avatar[]>("GET", "avatars"),
+  garments: () => req<Garment[]>("GET", "garments"),
+};
