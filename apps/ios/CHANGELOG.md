@@ -4,6 +4,16 @@ The AltStore-visible changelog lives in `altstore-source.json`
 (`apps[0].versions[].localizedDescription`). Bump the `version` there to release;
 CI builds the `.ipa` at that exact version so AltStore detects the update.
 
+## 1.2.0
+- **AR body measure (beta)** — ARKit body tracking captures real height/shoulder/
+  arm/leg measurements (`ARMeasureView`), PATCHed to the avatar.
+- **Avatar realism + customization** — hair, skin tones, body-build slider
+  (`CustomizeView`, `Customization`).
+- **Photo-import scan** — build an avatar from library photos (`PhotoImportView`).
+- **Size recommendations** — per-garment size + fit note (`SizeRecommender`).
+- **Add your own clothes** — local custom garments (`AddGarmentView`, `CustomGarments`).
+- **Outfit compare** — two saved looks side by side (`OutfitCompareView`).
+
 ## 1.1.0
 - **Camera presets** (Front / Side / Back) + **snapshot share** in the 3D try-on.
 - **Category filters** (Tops/Dresses/Bottoms/Outerwear/Shoes).

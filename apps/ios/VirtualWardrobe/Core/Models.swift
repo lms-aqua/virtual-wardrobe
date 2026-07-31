@@ -85,9 +85,13 @@ struct MeasurementPatch: Encodable {
     var waistCm: Double?
     var hipCm: Double?
     var inseamCm: Double?
+    var shoulderCm: Double?
+    var armCm: Double?
+    var torsoCm: Double?
     enum CodingKeys: String, CodingKey {
         case heightCm = "height_cm"; case chestCm = "chest_cm"
         case waistCm = "waist_cm"; case hipCm = "hip_cm"; case inseamCm = "inseam_cm"
+        case shoulderCm = "shoulder_cm"; case armCm = "arm_cm"; case torsoCm = "torso_cm"
     }
 }
 
@@ -106,6 +110,12 @@ struct AvatarDTO: Codable, Identifiable {
     }
 }
 
+struct GarmentSizeDTO: Codable {
+    let sizeLabel: String
+    let measurements: [String: Double]?
+    enum CodingKeys: String, CodingKey { case sizeLabel = "size_label"; case measurements }
+}
+
 struct GarmentDTO: Codable, Identifiable {
     let id: String
     let brand: String
@@ -113,9 +123,10 @@ struct GarmentDTO: Codable, Identifiable {
     let category: String
     let thumbUrl: String?
     let layeringOrder: Int
+    let sizes: [GarmentSizeDTO]
     enum CodingKeys: String, CodingKey {
         case id; case brand; case name; case category
-        case thumbUrl = "thumb_url"; case layeringOrder = "layering_order"
+        case thumbUrl = "thumb_url"; case layeringOrder = "layering_order"; case sizes
     }
 }
 

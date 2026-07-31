@@ -34,17 +34,18 @@ enum AvatarBuilder {
 
     private static func dims(_ meas: MeasurementDTO?) -> Dims {
         let h = m(meas?.heightCm, 1.70)
+        let b = Customization.buildFloat   // girth multiplier
         return Dims(
             height: h,
             shoulderW: m(meas?.shoulderCm, h * 0.259),
-            chestR: circR(meas?.chestCm, h * 0.082),
-            waistR: circR(meas?.waistCm, h * 0.068),
-            hipR: circR(meas?.hipCm, h * 0.083),
+            chestR: circR(meas?.chestCm, h * 0.082) * b,
+            waistR: circR(meas?.waistCm, h * 0.068) * b,
+            hipR: circR(meas?.hipCm, h * 0.083) * b,
             inseam: m(meas?.inseamCm, h * 0.45),
             torsoLen: m(meas?.torsoCm, h * 0.30),
             armLen: m(meas?.armCm, h * 0.44),
-            thighR: circR(meas?.thighCm, h * 0.05),
-            calfR: circR(meas?.calfCm, h * 0.035),
+            thighR: circR(meas?.thighCm, h * 0.05) * b,
+            calfR: circR(meas?.calfCm, h * 0.035) * b,
             neckR: circR(meas?.neckCm, h * 0.032),
             headR: h * 0.047
         )
@@ -59,7 +60,7 @@ enum AvatarBuilder {
         return m
     }
 
-    private static func skin() -> UIColor { UIColor(red: 0.85, green: 0.71, blue: 0.61, alpha: 1) }
+    private static func skin() -> UIColor { Customization.skinColor }
 
     static func makeBodyNode(measurements: MeasurementDTO?, garments: [GarmentDTO]) -> SCNNode {
         let d = dims(measurements)
@@ -116,8 +117,13 @@ enum AvatarBuilder {
         let neckLen = d.headR * 0.7
         let neck = SCNCylinder(radius: CGFloat(d.neckR), height: CGFloat(neckLen))
         add(neck, SCNVector3(0, shoulderY + neckLen / 2, 0), material: skinMat)
-        let head = SCNSphere(radius: CGFloat(d.headR))
-        add(head, SCNVector3(0, shoulderY + neckLen + d.headR * 0.95, 0), material: skinMat)
+        let headY = shoulderY + neckLen + d.headR * 0.95
+        let head = SCNSphere(radius: CGFloat(d.headR)); head.segmentCount = 40
+        add(head, SCNVector3(0, headY, 0), material: skinMat)
+        // Simple hair cap (dark sphere offset up/back so the face still shows).
+        let hairMat = mat(UIColor(red: 0.13, green: 0.10, blue: 0.10, alpha: 1), rough: 0.95)
+        let hair = SCNSphere(radius: CGFloat(d.headR * 1.02)); hair.segmentCount = 40
+        add(hair, SCNVector3(0, headY + d.headR * 0.20, -d.headR * 0.10), material: hairMat)
 
         // Clothing shells, ordered by layer_index.
         for g in garments.sorted(by: { $0.layeringOrder < $1.layeringOrder }) {

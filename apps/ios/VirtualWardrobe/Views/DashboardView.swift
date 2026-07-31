@@ -23,6 +23,8 @@ struct HomeView: View {
     @State private var avatars: [AvatarDTO] = []
     @State private var loading = true
     @State private var startScan = false
+    @State private var showPhotoImport = false
+    @State private var showAR = false
 
     var body: some View {
         NavigationStack {
@@ -59,6 +61,20 @@ struct HomeView: View {
                             .foregroundStyle(.white)
                             .background(Color.white.opacity(0.08),
                                         in: RoundedRectangle(cornerRadius: 16))
+                            HStack(spacing: 12) {
+                                NavigationLink { CustomizeView() } label: {
+                                    Label("Customize", systemImage: "paintpalette.fill")
+                                        .frame(maxWidth: .infinity, minHeight: 50)
+                                }
+                                NavigationLink { OutfitCompareView() } label: {
+                                    Label("Compare", systemImage: "square.on.square")
+                                        .frame(maxWidth: .infinity, minHeight: 50)
+                                }
+                            }
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .background(Color.white.opacity(0.08),
+                                        in: RoundedRectangle(cornerRadius: 16))
                         } else {
                             emptyState
                         }
@@ -70,6 +86,12 @@ struct HomeView: View {
             .navigationTitle("Home")
             .fullScreenCover(isPresented: $startScan, onDismiss: { Task { await load() } }) {
                 ScanContainer { startScan = false }
+            }
+            .fullScreenCover(isPresented: $showPhotoImport, onDismiss: { Task { await load() } }) {
+                PhotoImportView { showPhotoImport = false }
+            }
+            .fullScreenCover(isPresented: $showAR, onDismiss: { Task { await load() } }) {
+                ARMeasureView { showAR = false }
             }
             .task { await load() }
             .refreshable { await load() }
@@ -98,11 +120,17 @@ struct HomeView: View {
     }
 
     private var startScanButton: some View {
-        Button { startScan = true } label: {
-            Label(avatars.isEmpty ? "Start body scan" : "New body scan",
+        Menu {
+            Button { startScan = true } label: { Label("Camera 360° scan", systemImage: "camera.viewfinder") }
+            Button { showPhotoImport = true } label: { Label("Import photos", systemImage: "photo.on.rectangle.angled") }
+            Button { showAR = true } label: { Label("AR body measure (beta)", systemImage: "arkit") }
+        } label: {
+            Label(avatars.isEmpty ? "Start body scan" : "New scan / measure",
                   systemImage: "camera.viewfinder")
+                .frame(maxWidth: .infinity, minHeight: 54)
+                .foregroundStyle(.white)
+                .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 16))
         }
-        .buttonStyle(PrimaryButtonStyle())
     }
 
     private func load() async {

@@ -18,8 +18,15 @@ struct OutfitBuilderView: View {
     @State private var outfitName = "My outfit"
     @State private var toast: String?
     @State private var shareItem: ShareImage?
+    @State private var showAddGarment = false
 
     private let filters = ["All", "Tops", "Dresses", "Bottoms", "Outerwear", "Shoes"]
+
+    private var recs: [(GarmentDTO, SizeRecommender.Rec)] {
+        chosen.compactMap { g in
+            SizeRecommender.recommend(garment: g, measurements: avatar?.measurements).map { (g, $0) }
+        }
+    }
 
     private var chosen: [GarmentDTO] { garments.filter { selected.contains($0.id) } }
     private var visibleGarments: [GarmentDTO] {
@@ -48,6 +55,7 @@ struct OutfitBuilderView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
+                    Button { showAddGarment = true } label: { Label("Add clothing", systemImage: "plus") }
                     Button { share() } label: { Label("Share snapshot", systemImage: "square.and.arrow.up") }
                     if !selected.isEmpty {
                         Button { outfitName = "My outfit"; showNaming = true } label: {
@@ -60,6 +68,7 @@ struct OutfitBuilderView: View {
         .task { await load() }
         .onChange(of: selected) { rebuild() }
         .sheet(item: $shareItem) { ShareSheet(items: [$0.image]) }
+        .sheet(isPresented: $showAddGarment) { AddGarmentView { Task { await load() } } }
         .alert("Name your outfit", isPresented: $showNaming) {
             TextField("Outfit name", text: $outfitName)
             Button("Save") { Task { await save() } }
@@ -128,6 +137,22 @@ struct OutfitBuilderView: View {
                 }
             }
             .padding(.horizontal)
+            if !recs.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(recs, id: \.0.id) { g, rec in
+                            HStack(spacing: 4) {
+                                Text(g.name).font(.caption2).foregroundStyle(.white)
+                                Text("Size \(rec.label)").font(.caption2.bold()).foregroundStyle(Theme.accent2)
+                                Text("· \(rec.note)").font(.caption2).foregroundStyle(.white.opacity(0.6))
+                            }
+                            .padding(.horizontal, 10).padding(.vertical, 6)
+                            .background(Color.white.opacity(0.06), in: Capsule())
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(visibleGarments) { g in
@@ -191,7 +216,8 @@ struct OutfitBuilderView: View {
     private func load() async {
         loading = true
         avatar = (try? await session.api.avatars())?.first
-        garments = (try? await session.api.garments()) ?? []
+        let catalog = (try? await session.api.garments()) ?? []
+        garments = catalog + CustomGarments.all.map { CustomGarments.asGarment($0) }
         if let ids = initialGarmentIds { selected = ids }
         loading = false
         rebuild()
@@ -199,7 +225,8 @@ struct OutfitBuilderView: View {
 
     private func save() async {
         saving = true; defer { saving = false }
-        let items = chosen.map {
+        // Custom (local) garments can't be part of a synced outfit.
+        let items = chosen.filter { !CustomGarments.isCustom($0.id) }.map {
             OutfitItemIn(garmentId: $0.id, sizeLabel: "M", layerIndex: $0.layeringOrder)
         }
         _ = try? await session.api.createOutfit(name: outfitName, avatarId: avatar?.id, items: items)

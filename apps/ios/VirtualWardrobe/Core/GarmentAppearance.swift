@@ -13,6 +13,9 @@ struct GarmentAppearance {
     let region: GarmentRegion
 
     static func of(_ garment: GarmentDTO) -> GarmentAppearance {
+        if let custom = CustomGarments.color(for: garment.id) {
+            return GarmentAppearance(color: custom, region: regionFor(garment.category))
+        }
         let region: GarmentRegion
         switch garment.category.lowercased() {
         case "top": region = .top
@@ -23,6 +26,17 @@ struct GarmentAppearance {
         default: region = .unknown
         }
         return GarmentAppearance(color: colorFor(garment.name, region: region), region: region)
+    }
+
+    static func regionFor(_ category: String) -> GarmentRegion {
+        switch category.lowercased() {
+        case "top": return .top
+        case "dress": return .dress
+        case "bottom": return .bottom
+        case "outerwear": return .outerwear
+        case "footwear": return .footwear
+        default: return .unknown
+        }
     }
 
     private static func colorFor(_ name: String, region: GarmentRegion) -> Color {

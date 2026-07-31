@@ -14,12 +14,20 @@
       "iconURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/icon.png",
       "tintColor": "6D5EFC",
       "category": "lifestyle",
-      "version": "1.1.0",
-      "versionDate": "2026-07-30T23:00:00-04:00",
-      "versionDescription": "More of everything: camera presets + snapshot sharing, category filters, a Saved Outfits manager, a full Settings hub with unit preferences, and guided onboarding.",
+      "version": "1.2.0",
+      "versionDate": "2026-07-31T00:00:00-04:00",
+      "versionDescription": "AR body measuring (beta), a more lifelike customizable avatar, scan from photos, size recommendations, add your own clothes, and outfit compare.",
       "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
       "size": 475725,
       "versions": [
+        {
+          "version": "1.2.0",
+          "date": "2026-07-31T00:00:00-04:00",
+          "localizedDescription": "🚀 Virtual Wardrobe 1.2 — your realest avatar yet\n\n📐 AR BODY MEASURE (beta)\nOn supported iPhones, point the camera at yourself and capture REAL measurements — height, shoulders, arm & leg length — straight from ARKit body tracking.\n\n🧍 A MORE LIFELIKE AVATAR\nSmoother body, hair, and skin tones. New Customize screen to pick your skin tone and body build.\n\n🖼️ SCAN FROM PHOTOS\nNo room to spin? Import full-body photos from your library instead of a live scan.\n\n📏 SIZE RECOMMENDATIONS\nPick a garment and see your suggested size and fit (snug / true to size / relaxed).\n\n➕ ADD YOUR OWN CLOTHES\nCreate a garment by type and colour and try it on in 3D.\n\n🆚 COMPARE OUTFITS\nView two saved looks side-by-side on your avatar.\n\nNote: circumferences (chest/waist/hip) are still estimated — full body reconstruction and cloth simulation are still ahead.",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "size": 475725,
+          "minOSVersion": "17.0"
+        },
         {
           "version": "1.1.0",
           "date": "2026-07-30T23:00:00-04:00",
