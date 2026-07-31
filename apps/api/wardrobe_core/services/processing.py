@@ -68,6 +68,7 @@ async def process_scan(scan_id: uuid.UUID) -> None:
         if job:
             job.status = JobStatus.processing
             job.attempts += 1
+            job.progress = 15
         await db.commit()
 
         # 1) Load + validate every uploaded image (magic-byte + size re-check).
@@ -97,8 +98,10 @@ async def process_scan(scan_id: uuid.UUID) -> None:
             await fail("low_quality")
             return
 
-        # 3) Generate avatar (mock).
+        # 3) Generate avatar (real parametric mesh).
         scan.status = ScanStatus.processing
+        if job:
+            job.progress = 55
         await db.commit()
         result = get_avatar_provider().generate(
             images=images, height_cm=scan.height_cm, hints_cm={}
@@ -116,6 +119,8 @@ async def process_scan(scan_id: uuid.UUID) -> None:
 
         # 4) Publish GLB + thumbnail to the PRIVATE avatars bucket.
         scan.status = ScanStatus.optimizing
+        if job:
+            job.progress = 85
         mkey = avatar_mesh_key(scan.user_id, avatar.id)
         tkey = avatar_thumb_key(scan.user_id, avatar.id)
         storage.put_object(settings.s3_bucket_avatars, mkey, result.glb_bytes, "model/gltf-binary")
@@ -144,6 +149,7 @@ async def process_scan(scan_id: uuid.UUID) -> None:
         scan.status = ScanStatus.completed
         if job:
             job.status = JobStatus.completed
+            job.progress = 100
         await audit.record(
             db, action="avatar.created", actor_user_id=scan.user_id,
             target_type="avatar", target_id=str(avatar.id),

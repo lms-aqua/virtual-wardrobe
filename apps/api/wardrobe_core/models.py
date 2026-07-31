@@ -54,6 +54,7 @@ class User(Base, TimestampMixin):
     display_unit: Mapped[str] = mapped_column(String(8), default="metric", nullable=False)
     # Adult attestation captured at signup; scanning is gated on this + consent.
     is_adult: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     status: Mapped[enums.UserStatus] = mapped_column(
         Enum(enums.UserStatus, native_enum=False, length=16),
         default=enums.UserStatus.active,
@@ -183,6 +184,7 @@ class ScanJob(Base, TimestampMixin):
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
     idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    progress: Mapped[int] = mapped_column(Integer, default=0, nullable=False)  # 0..100
 
 
 class Avatar(Base, TimestampMixin):
@@ -310,6 +312,19 @@ class OutfitItem(Base, TimestampMixin):
     fit_adjust: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     outfit: Mapped[Outfit] = relationship(back_populates="items")
+
+
+class UserPreference(Base, TimestampMixin):
+    """Free-form per-user client preferences (units, customization, favorites)
+    synced across devices. One row per user; ``data`` is opaque client JSON."""
+
+    __tablename__ = "user_preferences"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=_uuid)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True, nullable=False
+    )
+    data: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
 
 class AuditEvent(Base, TimestampMixin):

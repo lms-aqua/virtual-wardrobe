@@ -209,6 +209,52 @@ class JobOut(ORMModel):
     id: uuid.UUID
     status: enums.JobStatus
     error_code: str | None
+    progress: int = 0
+
+
+# ---- Garment admin ----
+class GarmentSizeIn(BaseModel):
+    size_label: str
+    measurements: dict | None = None
+
+
+class GarmentCreate(BaseModel):
+    brand: str
+    name: str
+    category: enums.GarmentCategory
+    gender_neutral: bool = True
+    layering_order: int = 0
+    price_cents: int | None = None
+    product_url: str | None = None
+    fabric_props: dict | None = None
+    sizes: list[GarmentSizeIn] = []
+
+
+class GarmentUpdate(BaseModel):
+    brand: str | None = None
+    name: str | None = None
+    category: enums.GarmentCategory | None = None
+    layering_order: int | None = None
+    price_cents: int | None = None
+    product_url: str | None = None
+
+
+# ---- Preferences sync ----
+class PreferenceIn(BaseModel):
+    data: dict
+
+
+class PreferenceOut(BaseModel):
+    data: dict
+    updated_at: datetime
+
+
+# ---- Sessions ----
+class SessionOut(ORMModel):
+    id: uuid.UUID
+    created_at: datetime
+    expires_at: datetime
+    revoked_at: datetime | None = None
 
 
 class DeletionRequestIn(BaseModel):
@@ -220,3 +266,12 @@ class DeletionRequestOut(ORMModel):
     scope: enums.DeletionScope
     status: enums.DeletionStatus
     completed_at: datetime | None
+
+
+class AuditEventOut(ORMModel):
+    id: uuid.UUID
+    actor_user_id: uuid.UUID | None
+    action: str
+    target_type: str | None
+    target_id: str | None
+    created_at: datetime

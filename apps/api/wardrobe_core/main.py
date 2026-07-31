@@ -54,6 +54,9 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    from wardrobe_core.observability import RequestContextMiddleware
+
+    app.add_middleware(RequestContextMiddleware)
     app.add_middleware(SecurityHeadersMiddleware, is_production=settings.is_production)
     app.add_middleware(
         CORSMiddleware,
@@ -66,6 +69,7 @@ def create_app() -> FastAPI:
 
     from wardrobe_core.routers import (
         account,
+        admin,
         auth,
         avatars,
         consents,
@@ -86,6 +90,7 @@ def create_app() -> FastAPI:
         outfits.router,
         jobs.router,
         account.router,
+        admin.router,
     ):
         app.include_router(router)
 

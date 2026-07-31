@@ -77,14 +77,50 @@ async def get_current_user(
     return user
 
 
-# ---- Minimal rate limiter (in-process; swap for Redis in prod scale-out) ----
+async def get_admin_user(user: User = Depends(get_current_user)) -> User:
+    if not user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="admin_only")
+    return user
+
+
+# ---- Rate limiter: Redis-backed (shared across instances), in-process fallback ----
 _hits: dict[str, list[float]] = {}
+_redis = None
+
+
+def _get_redis():  # noqa: ANN202
+    global _redis
+    if _redis is None:
+        import redis.asyncio as aioredis
+
+        _redis = aioredis.from_url(
+            get_settings().effective_redis_url,
+            decode_responses=True,
+            socket_connect_timeout=0.25,
+            socket_timeout=0.25,
+        )
+    return _redis
 
 
 def rate_limit(bucket: str, limit: int, window_seconds: int):  # noqa: ANN201
     async def _dep(request: Request) -> None:
         ip = request.client.host if request.client else "unknown"
-        key = f"{bucket}:{ip}"
+        key = f"rl:{bucket}:{ip}"
+        # Try Redis first (works across scaled-out instances).
+        try:
+            r = _get_redis()
+            n = await r.incr(key)
+            if n == 1:
+                await r.expire(key, window_seconds)
+            if n > limit:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="rate limited"
+                )
+            return
+        except HTTPException:
+            raise
+        except Exception:  # noqa: BLE001 — Redis unavailable → local fallback
+            pass
         now = time.monotonic()
         window = _hits.setdefault(key, [])
         cutoff = now - window_seconds

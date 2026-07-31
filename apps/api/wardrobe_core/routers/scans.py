@@ -83,6 +83,22 @@ async def create_scan(
     return scan
 
 
+@router.get("", response_model=list[ScanOut])
+async def list_scans(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[BodyScan]:
+    rows = (
+        await db.execute(
+            select(BodyScan)
+            .where(BodyScan.user_id == user.id)
+            .options(selectinload(BodyScan.images))
+            .order_by(BodyScan.created_at.desc())
+        )
+    ).scalars().all()
+    return list(rows)
+
+
 @router.get("/{scan_id}", response_model=ScanOut)
 async def get_scan(
     scan_id: uuid.UUID,

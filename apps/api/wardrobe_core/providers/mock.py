@@ -95,8 +95,16 @@ class MockAvatarGenerationProvider:
                 measurements[key] = round(float(value), 1)
 
         shape_params = {"height_norm": round((h - 150.0) / 50.0, 4)}
+        # Generate a REAL parametric 3D body mesh from the measurements. Still a
+        # stylized estimate (labeled is_mock), not a photogrammetric scan.
+        try:
+            from wardrobe_core.providers.meshgen import build_avatar_glb
+
+            glb = build_avatar_glb(measurements)
+        except Exception:  # noqa: BLE001 — fall back to a valid empty GLB
+            glb = _minimal_glb()
         return AvatarResult(
-            glb_bytes=_minimal_glb(),
+            glb_bytes=glb,
             thumbnail_png=_PLACEHOLDER_PNG,
             measurements_cm=measurements,
             shape_params=shape_params,

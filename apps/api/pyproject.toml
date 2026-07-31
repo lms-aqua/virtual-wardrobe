@@ -21,6 +21,8 @@ dependencies = [
     "itsdangerous>=2.2.0",
     "pyjwt[crypto]>=2.9.0",
     "email-validator>=2.2.0",
+    "trimesh>=4.0",
+    "numpy>=1.26",
 ]
 
 [project.optional-dependencies]
