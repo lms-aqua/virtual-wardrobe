@@ -81,9 +81,10 @@ private struct PreviewGrid: View {
             }
             .background(DS.Color.grouped)
             .navigationTitle("Wardrobe")
-            .safeAreaInset(edge: .bottom) {
-                DSFloatingActionControl(title: "Add Garment", systemImage: "plus") {}
-                    .padding(.bottom, DS.Space.m)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {} label: { Label("Add Garment", systemImage: "plus") }
+                }
             }
         }
     }

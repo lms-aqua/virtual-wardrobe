@@ -3,9 +3,10 @@ import SwiftUI
 /// Production Wardrobe screen — the garments available to your 3D try-on.
 ///
 /// Real data from the garment API plus your local custom garments. The grid is
-/// the subject: filters are a single compact row, the primary action floats in
-/// reach at the bottom, and the toolbar stays empty so the large title and the
-/// garments carry the screen.
+/// the subject: filters are a single compact row and Add lives in the navigation
+/// toolbar. A floating capsule was tried first, but this screen sits inside a
+/// TabView, so it stacked a second floating element in the same corner as the
+/// tab bar and covered the last row.
 struct WardrobeView: View {
     @EnvironmentObject var session: AuthStore
 
@@ -34,7 +35,14 @@ struct WardrobeView: View {
                 .navigationTitle("Wardrobe")
                 .background(DS.Color.grouped)
                 .searchable(text: $query, prompt: "Search garments")
-                .safeAreaInset(edge: .bottom) { floatingAdd }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { showAdd = true } label: {
+                            Label("Add Garment", systemImage: "plus")
+                        }
+                        .accessibilityLabel("Add Garment")
+                    }
+                }
                 .task { if case .idle = state { await load() } }
                 .refreshable { await load() }
                 .sheet(isPresented: $showAdd) {
@@ -140,7 +148,10 @@ struct WardrobeView: View {
             .padding(.horizontal, DS.Space.screenMargin)
             .padding(.vertical, DS.Space.s)
         }
-        .scrollClipDisabled()
+        // No .scrollClipDisabled() here. It let the chips render outside their
+        // bounds: their layout slot stayed empty under the search bar while the
+        // chips themselves drew down over the first grid row, behind the
+        // garment tiles.
     }
 
     private func setCategory(_ c: String?) {
@@ -148,15 +159,6 @@ struct WardrobeView: View {
             category = c
         }
         DS.Haptic.selection()
-    }
-
-    // MARK: primary action
-
-    private var floatingAdd: some View {
-        DSFloatingActionControl(title: "Add Garment", systemImage: "plus") {
-            showAdd = true
-        }
-        .padding(.bottom, DS.Space.m)
     }
 
     // MARK: states

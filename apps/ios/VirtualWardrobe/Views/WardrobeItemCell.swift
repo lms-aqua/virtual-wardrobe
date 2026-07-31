@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Reusable garment cell for the Wardrobe grid.
 ///
@@ -70,11 +71,17 @@ struct WardrobeItemCell: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous))
     }
 
+    /// Shown when the catalog has no photo for this garment (`thumb_url` is
+    /// null server-side for the seeded catalog). Previously a small symbol
+    /// floating on a flat block, which read as "coloured square" rather than
+    /// clothing — the symbol now fills the tile so the silhouette is legible.
     private var symbolPlaceholder: some View {
         ZStack {
-            GarmentAppearance.of(garment).color.opacity(0.22)
+            GarmentAppearance.of(garment).color.opacity(0.18)
             Image(systemName: symbol)
-                .font(.largeTitle)                  // scales with Dynamic Type
+                .resizable()
+                .scaledToFit()
+                .padding(DS.Space.xxxl)
                 .foregroundStyle(GarmentAppearance.of(garment).color)
         }
     }
@@ -104,14 +111,23 @@ struct WardrobeItemCell: View {
         CustomGarments.isCustom(garment.id) ? .custom : nil
     }
 
+    /// Category symbol, resolved at runtime.
+    ///
+    /// Outerwear was `wind` and bottoms were `figure.walk` — a breeze icon and a
+    /// walking person, neither of which reads as a garment. These are the right
+    /// symbols, but some were added in later SF Symbols releases and a missing
+    /// name renders as *nothing*, so each is checked before use and falls back
+    /// to a shape that definitely exists.
     private var symbol: String {
+        let preferred: String
         switch garment.category.lowercased() {
-        case "dress": return "figure.dress.line.vertical.figure"
-        case "bottom": return "figure.walk"
-        case "outerwear": return "wind"
-        case "footwear": return "shoe.2"
-        default: return "tshirt.fill"
+        case "dress": preferred = "figure.dress.line.vertical.figure"
+        case "bottom": preferred = "pants"
+        case "outerwear": preferred = "jacket"
+        case "footwear": preferred = "shoe.2"
+        default: preferred = "tshirt.fill"
         }
+        return UIImage(systemName: preferred) != nil ? preferred : "tshirt.fill"
     }
 
     private var displayCategory: String { garment.category.capitalized }
