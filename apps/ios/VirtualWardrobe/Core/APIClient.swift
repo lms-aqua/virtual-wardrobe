@@ -84,6 +84,11 @@ struct APIClient {
 
     // MARK: Avatars / wardrobe
     func avatars() async throws -> [AvatarDTO] { try decode(await request("GET", "avatars")) }
+    func patchMeasurements(avatarId: String, _ patch: MeasurementPatch) async throws -> AvatarDTO {
+        let data = try JSONEncoder().encode(patch)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+        return try decode(await request("PATCH", "avatars/\(avatarId)/measurements", json: json))
+    }
     func garments() async throws -> [GarmentDTO] { try decode(await request("GET", "garments")) }
     func outfits() async throws -> [OutfitDTO] { try decode(await request("GET", "outfits")) }
     func createOutfit(name: String, avatarId: String?, items: [OutfitItemIn]) async throws -> OutfitDTO {

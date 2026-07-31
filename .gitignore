@@ -20,6 +20,9 @@ out/
 *.key
 secrets/
 
+# local operational handoff (contains access details; repo is public)
+HANDOFF.md
+
 # data / uploads (local minio, db volumes)
 infrastructure/data/
 *.sqlite3

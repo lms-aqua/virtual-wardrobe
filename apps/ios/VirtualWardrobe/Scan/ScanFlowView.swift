@@ -55,27 +55,22 @@ final class ScanFlowModel: ObservableObject {
             }
             countdown = nil
 
-            // Capture frames as the user slowly rotates.
+            // Capture frames as the user slowly rotates. Each frame is
+            // downscaled immediately so memory + upload stay small.
             phase = .capturing
             frames.removeAll()
             for i in 0..<targetFrames {
                 status = "Keep turning slowly… \(i + 1)/\(targetFrames)"
-                let jpeg = try await camera.capture()
-                frames.append(jpeg)
+                let raw = try await camera.capture()
+                frames.append(ImageUtils.downscaledJPEG(raw))
                 captured = i + 1
-                try? await Task.sleep(nanoseconds: 350_000_000)
+                try? await Task.sleep(nanoseconds: 300_000_000)
             }
 
-            // Upload every frame.
+            // Upload frames concurrently (much faster than sequential).
             phase = .uploading
-            for (i, jpeg) in frames.enumerated() {
-                status = "Uploading frames… \(i + 1)/\(frames.count)"
-                let view = String(format: "frame_%04d", i)
-                let presigned = try await api.uploadURL(
-                    scanId: scanId, view: view, contentType: "image/jpeg")
-                try await api.uploadToPresigned(presigned, imageData: jpeg)
-                uploaded = i + 1
-            }
+            uploaded = 0
+            try await uploadConcurrently(frames, scanId: scanId, maxParallel: 4)
 
             // Kick off avatar generation.
             phase = .processing
@@ -88,6 +83,32 @@ final class ScanFlowModel: ObservableObject {
             phase = .idle
             captured = 0
             uploaded = 0
+        }
+    }
+
+    private func bumpUploaded() { uploaded += 1 }
+
+    /// Upload frames in batches so several run at once (cap = maxParallel).
+    private func uploadConcurrently(_ frames: [Data], scanId: String,
+                                    maxParallel: Int) async throws {
+        let api = self.api
+        var index = 0
+        while index < frames.count {
+            let end = min(index + maxParallel, frames.count)
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for i in index..<end {
+                    let jpeg = frames[i]
+                    let view = String(format: "frame_%04d", i)
+                    group.addTask {
+                        let presigned = try await api.uploadURL(
+                            scanId: scanId, view: view, contentType: "image/jpeg")
+                        try await api.uploadToPresigned(presigned, imageData: jpeg)
+                    }
+                }
+                for try await _ in group { bumpUploaded() }
+            }
+            status = "Uploading frames… \(uploaded)/\(frames.count)"
+            index = end
         }
     }
 }

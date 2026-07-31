@@ -5,8 +5,8 @@ struct DashboardView: View {
         TabView {
             HomeView()
                 .tabItem { Label("Home", systemImage: "house.fill") }
-            WardrobeView()
-                .tabItem { Label("Wardrobe", systemImage: "tshirt.fill") }
+            NavigationStack { OutfitBuilderView() }
+                .tabItem { Label("Try On", systemImage: "cube.transparent.fill") }
             PrivacyControlsView()
                 .tabItem { Label("Privacy", systemImage: "lock.shield.fill") }
         }
@@ -30,6 +30,21 @@ struct HomeView: View {
                             ProgressView().tint(.white).frame(maxWidth: .infinity).padding(.top, 40)
                         } else if let avatar = avatars.first {
                             AvatarCard(avatar: avatar)
+                            NavigationLink {
+                                OutfitBuilderView()
+                            } label: {
+                                Label("Try on in 3D", systemImage: "cube.transparent.fill")
+                            }
+                            .buttonStyle(PrimaryButtonStyle())
+                            NavigationLink {
+                                MeasurementsView()
+                            } label: {
+                                Label("Edit measurements", systemImage: "ruler.fill")
+                                    .frame(maxWidth: .infinity, minHeight: 50)
+                            }
+                            .foregroundStyle(.white)
+                            .background(Color.white.opacity(0.08),
+                                        in: RoundedRectangle(cornerRadius: 16))
                         } else {
                             emptyState
                         }

@@ -51,12 +51,43 @@ struct JobDTO: Codable { let id: String; let status: String; let errorCode: Stri
 
 struct MeasurementDTO: Codable {
     let heightCm: Double?
+    let shoulderCm: Double?
     let chestCm: Double?
+    let underbustCm: Double?
     let waistCm: Double?
     let hipCm: Double?
+    let inseamCm: Double?
+    let torsoCm: Double?
+    let armCm: Double?
+    let thighCm: Double?
+    let calfCm: Double?
+    let neckCm: Double?
+    enum CodingKeys: String, CodingKey {
+        case heightCm = "height_cm"
+        case shoulderCm = "shoulder_cm"
+        case chestCm = "chest_cm"
+        case underbustCm = "underbust_cm"
+        case waistCm = "waist_cm"
+        case hipCm = "hip_cm"
+        case inseamCm = "inseam_cm"
+        case torsoCm = "torso_cm"
+        case armCm = "arm_cm"
+        case thighCm = "thigh_cm"
+        case calfCm = "calf_cm"
+        case neckCm = "neck_cm"
+    }
+}
+
+/// Editable measurement payload for PATCH /avatars/{id}/measurements.
+struct MeasurementPatch: Encodable {
+    var heightCm: Double?
+    var chestCm: Double?
+    var waistCm: Double?
+    var hipCm: Double?
+    var inseamCm: Double?
     enum CodingKeys: String, CodingKey {
         case heightCm = "height_cm"; case chestCm = "chest_cm"
-        case waistCm = "waist_cm"; case hipCm = "hip_cm"
+        case waistCm = "waist_cm"; case hipCm = "hip_cm"; case inseamCm = "inseam_cm"
     }
 }
 
@@ -81,8 +112,10 @@ struct GarmentDTO: Codable, Identifiable {
     let name: String
     let category: String
     let thumbUrl: String?
+    let layeringOrder: Int
     enum CodingKeys: String, CodingKey {
-        case id; case brand; case name; case category; case thumbUrl = "thumb_url"
+        case id; case brand; case name; case category
+        case thumbUrl = "thumb_url"; case layeringOrder = "layering_order"
     }
 }
 

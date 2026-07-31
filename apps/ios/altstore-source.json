@@ -14,12 +14,20 @@
       "iconURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/icon.png",
       "tintColor": "6D5EFC",
       "category": "lifestyle",
-      "version": "0.1.2",
-      "versionDate": "2026-07-30T21:30:00-04:00",
-      "versionDescription": "Camera defaults to the front (selfie) camera with a tap to switch to the back.",
+      "version": "1.0.0",
+      "versionDate": "2026-07-30T22:00:00-04:00",
+      "versionDescription": "The first full release: try on clothes on a rotatable 3D avatar built from your measurements, faster scanning, and a measurements editor.",
       "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
       "size": 411466,
       "versions": [
+        {
+          "version": "1.0.0",
+          "date": "2026-07-30T22:00:00-04:00",
+          "localizedDescription": "✨ Virtual Wardrobe 1.0 — the first full release\n\n👗 TRY ON CLOTHES IN 3D\nA real, rotatable 3D avatar built from your body measurements. Drag to spin, pinch to zoom. Tap garments to dress it and watch outfits layer on live.\n\n📸 FASTER, SMOOTHER SCANNING\nThe 360° body scan now compresses and uploads frames in parallel — noticeably quicker. Front camera by default with a one-tap flip.\n\n📏 EDIT YOUR MEASUREMENTS\nFine-tune height, chest, waist, hip and inseam — your 3D avatar updates to match.\n\n💾 SAVE & COMPARE OUTFITS\nBuild looks and save them to your wardrobe, synced to your account.\n\n🔒 PRIVATE BY DESIGN\nAdults-only consent, private storage, no face recognition, one-tap delete.\n\nNote: the avatar is a measurement-based 3D preview — realistic body scanning (LiDAR / photogrammetry) and true cloth simulation are coming next.",
+          "downloadURL": "https://github.com/lms-aqua/virtual-wardrobe/releases/download/ios-latest/VirtualWardrobe-unsigned.ipa",
+          "size": 411466,
+          "minOSVersion": "17.0"
+        },
         {
           "version": "0.1.2",
           "date": "2026-07-30T21:30:00-04:00",
