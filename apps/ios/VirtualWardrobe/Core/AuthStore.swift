@@ -31,8 +31,17 @@ final class AuthStore: ObservableObject {
     }
 
     func refreshUser() async {
-        do { user = try await api.me() }
-        catch { user = nil }  // token invalid/expired → treat as signed out
+        do {
+            user = try await api.me()
+        } catch let e as APIError where e.isAuthFailure {
+            // The session really is gone.
+            user = nil
+        } catch {
+            // Transient (offline, DNS, 5xx). This used to clear `user` for ANY
+            // error, so returning to the app on a flaky connection signed a
+            // perfectly valid session out and bounced it to the welcome screen.
+            // The token stays in the Keychain and the next refresh recovers.
+        }
     }
 
     func signIn(email: String, isAdult: Bool) async -> Bool {

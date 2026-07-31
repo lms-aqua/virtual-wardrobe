@@ -4,11 +4,44 @@ enum APIError: LocalizedError {
     case http(Int, String)
     case decoding
     case network(String)
+
+    /// True only when the session is genuinely gone. Callers must not treat a
+    /// dropped connection as a sign-out — doing so bounced valid sessions to
+    /// the login screen on any transient failure.
+    var isAuthFailure: Bool {
+        if case .http(let code, _) = self { return code == 401 || code == 403 }
+        return false
+    }
+
+    /// Safe to display. The body is deliberately excluded: `errorDescription`
+    /// used to interpolate the raw response, putting backend exception text and
+    /// internal detail straight into the interface.
     var errorDescription: String? {
         switch self {
-        case .http(let code, let body): return "Server error \(code): \(body)"
-        case .decoding: return "Could not read the server response."
-        case .network(let m): return m
+        case .http(let code, _):
+            switch code {
+            case 401, 403: return "Your session has expired. Please sign in again."
+            case 404: return "That’s no longer available."
+            case 409: return "That conflicts with something that already exists."
+            case 413: return "That file is too large."
+            case 422: return "Some of that information wasn’t valid."
+            case 429: return "Too many attempts. Please wait a moment and try again."
+            case 500...599: return "The server is having trouble. Please try again shortly."
+            default: return "Something went wrong. Please try again."
+            }
+        case .decoding:
+            return "Could not read the server response."
+        case .network:
+            return "Can’t reach the server. Check your connection and try again."
+        }
+    }
+
+    /// Full detail for logs and debugging only — never rendered to the user.
+    var diagnosticDescription: String {
+        switch self {
+        case .http(let code, let body): return "HTTP \(code): \(body)"
+        case .decoding: return "decoding failure"
+        case .network(let m): return "network: \(m)"
         }
     }
 }

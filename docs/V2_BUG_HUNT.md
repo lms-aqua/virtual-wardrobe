@@ -35,6 +35,12 @@ then reproduced with a failing test or a direct observation.
 | BUG-003 | P2 | Backend / DB | SQLite silently ignores all foreign keys | CI verified |
 | BUG-004 | P3 | Backend | `HTTP_422_UNPROCESSABLE_ENTITY` deprecation warning | CI verified |
 | BUG-005 | P3 | Release | API package version drifted from shipped app version | CI verified |
+| BUG-006 | **P1** | iOS | Avatar processing retries forever, user trapped | CI verified |
+| BUG-007 | **P1** | iOS | Cancelled polling becomes a tight spin loop | CI verified |
+| BUG-008 | P2 | iOS | Failed outfit save reports success | CI verified |
+| BUG-009 | P2 | iOS | Double-tap Save creates duplicate outfits | CI verified |
+| BUG-010 | P2 | iOS | Any network error treated as sign-out | CI verified |
+| BUG-011 | P2 | iOS | Raw backend response body rendered to users | CI verified |
 
 ---
 
@@ -158,6 +164,117 @@ which is stable across both.
 **Files:** `apps/api/pyproject.toml` · **Status:** CI verified.
 
 ---
+
+### BUG-006 — Avatar processing retries forever and traps the user · **P1**
+
+- **Surface:** iOS, `Scan/ProcessingView.swift`
+- **Workflow:** body scan → avatar generation
+
+**Reproduction:** start a scan, then make `GET /jobs/{id}` fail persistently
+(expired token, deleted job, server down).
+
+**Expected:** a bounded number of retries, then a terminal failure with a way out.
+
+**Actual:** the `catch` swallowed every error with the comment *"transient; keep
+polling a few cycles"* — but there was no counter. The loop retried at 1.5 s forever.
+`navigationBarBackButtonHidden(true)` is set on this screen, so the user had **no way
+to leave**: a permanent spinner over an app hammering the API.
+
+**Root cause:** no retry ceiling and no terminal state for transport failure — the
+only failure path recognised was the *server* reporting `status == "failed"`.
+
+**Fix:** capped at 5 consecutive failures, then enters the existing terminal failed
+state (which offers Back). Adds a `network_unreachable` code so the copy stops
+blaming scan quality for a connection problem.
+
+**Files:** `Scan/ProcessingView.swift` · **Status:** CI verified (compile).
+
+---
+
+### BUG-007 — Cancelling the processing screen becomes a tight spin loop · **P1**
+
+- **Surface:** iOS, `Scan/ProcessingView.swift`
+
+**Root cause:** `try? await Task.sleep(...)` inside `while polling`. When `.task`
+cancels on disappear, `Task.sleep` throws `CancellationError` **immediately**; `try?`
+discarded it, `polling` was still `true`, so the loop continued *with no delay* —
+a busy loop burning CPU and still calling the API after the user navigated away.
+
+This is the general hazard of `try?` on `Task.sleep` inside a loop: it converts
+cancellation into a spin. A repo-wide check found the same shape in
+`Scan/PhotoImportView.swift`, but bounded to 40 iterations, so it is capped rather
+than infinite (logged as a P3 below).
+
+**Fix:** the loop checks `Task.isCancelled`, and the sleep's cancellation now returns
+instead of being swallowed.
+
+**Files:** `Scan/ProcessingView.swift` · **Status:** CI verified (compile).
+
+---
+
+### BUG-008 — A failed outfit save reports success · **P2**
+
+`OutfitBuilderView.save()` ran `_ = try? await session.api.createOutfit(...)` and then
+showed `"Outfit saved ✓"` unconditionally. Both the result and the error were
+discarded, so a network failure was indistinguishable from a save — the user believed
+their outfit was stored when nothing had been written.
+
+**Fix:** branches on the outcome and reports failure. **Files:**
+`Views/OutfitBuilderView.swift` · **Status:** CI verified (compile).
+
+---
+
+### BUG-009 — Double-tapping Save creates duplicate outfits · **P2**
+
+`saving` was assigned in `save()` but **never consulted anywhere**, and the naming
+alert's Save button had no guard, so two taps issued two `POST /outfits` calls and
+created two identical outfits.
+
+**Fix:** `save()` is re-entrant-safe via an early `guard !saving`. **Files:**
+`Views/OutfitBuilderView.swift` · **Status:** CI verified (compile).
+
+---
+
+### BUG-010 — Any network error is treated as a sign-out · **P2**
+
+`AuthStore.refreshUser()` was `do { user = try await api.me() } catch { user = nil }`.
+Every failure — offline, DNS, 5xx — cleared `user`, and `isAuthenticated` is
+`user != nil`, so `RootView` dropped to the welcome screen. Returning to the app on a
+flaky connection signed a perfectly valid session out.
+
+**Fix:** only `APIError.isAuthFailure` (401/403) clears the session; transient errors
+leave it intact and the token stays in the Keychain for the next refresh.
+
+**Known limitation:** a *cold* launch with no network still shows the welcome screen,
+because there is no cached user snapshot to restore. Logged below rather than
+half-fixed.
+
+**Files:** `Core/AuthStore.swift`, `Core/APIClient.swift` · **Status:** CI verified.
+
+---
+
+### BUG-011 — Raw backend response body rendered to users · **P2**
+
+`APIError.errorDescription` returned `"Server error \(code): \(body)"`, interpolating
+the **raw response body**. `AuthStore` assigns `error.localizedDescription` (which
+resolves to `errorDescription`) into `errorMessage`, and `WelcomeView` shows it in an
+alert — so backend exception text and internal detail reached the interface.
+
+**Fix:** `errorDescription` now maps status to a human-safe sentence and never
+includes the body. Full detail moved to `diagnosticDescription`, for logs only. Also
+adds `isAuthFailure`, which is what makes BUG-010 fixable.
+
+**Files:** `Core/APIClient.swift` · **Status:** CI verified.
+
+---
+
+## Deferred, with reasons
+
+| ID | Sev | Issue | Why deferred |
+|---|---|---|---|
+| BUG-012 | P3 | `PhotoImportView` uses the same `try?`-on-`Task.sleep` shape as BUG-007 | Bounded to 40 iterations, so cancellation costs at most 40 fast requests rather than an unbounded spin. Real but low impact. |
+| BUG-013 | P2 | 27 sites use `try? await session.api…`, rendering failures as empty content | Systemic. Fixed where it caused a false success or a stuck state (Saved Outfits, outfit save, auth). A blanket rewrite of every read path is a larger change than a bug hunt should carry, and each site needs its own error UI. |
+| BUG-014 | P3 | Cold offline launch shows the welcome screen | Needs a cached user snapshot with its own invalidation rules — new persistence surface, not a bug fix. |
 
 ## Passes completed
 
