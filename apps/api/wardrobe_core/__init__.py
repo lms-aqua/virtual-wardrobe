@@ -8,6 +8,6 @@ try:
     # reads whatever was actually installed rather than a second hardcoded copy.
     __version__ = _package_version("wardrobe-core")
 except PackageNotFoundError:  # running from a source checkout, not installed
-    __version__ = "3.0.0"
+    __version__ = "3.1.0"
 
 __all__ = ["__version__"]
