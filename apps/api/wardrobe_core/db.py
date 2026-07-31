@@ -40,6 +40,21 @@ def get_engine() -> AsyncEngine:
 
             kwargs = {"echo": False, "poolclass": NullPool}
         _engine = create_async_engine(url, **kwargs)
+
+        if url.startswith("sqlite"):
+            # SQLite ignores FOREIGN KEY constraints unless asked, per
+            # connection. Without this the schema's foreign keys are decorative
+            # in dev and test: an orphaned reference inserts happily here and
+            # only blows up as a 500 IntegrityError on Postgres in production.
+            # Turning it on makes local runs fail the same way prod would.
+            from sqlalchemy import event
+
+            @event.listens_for(_engine.sync_engine, "connect")
+            def _sqlite_enforce_foreign_keys(dbapi_connection, _record):  # noqa: ANN001, ANN202
+                cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA foreign_keys=ON")
+                cursor.close()
+
     return _engine
 
 

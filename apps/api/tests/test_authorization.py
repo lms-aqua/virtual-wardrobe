@@ -51,6 +51,70 @@ async def test_user_cannot_read_another_users_scan_avatar_outfit(client: TestCli
     assert client.get(f"/outfits/{outfit_id}", headers=a).status_code == 200
 
 
+async def test_outfit_cannot_reference_another_users_avatar(client: TestClient) -> None:
+    """BUG-001 — outfit creation trusted avatar_id straight from the client.
+
+    Nothing checked that the referenced avatar belonged to the caller, so B
+    could attach A's avatar to their own outfit and have the API persist and
+    echo back a cross-account reference.
+    """
+    a = auth_headers(client, "dave@example.com")
+    b = auth_headers(client, "erin@example.com")
+    grant_scan_consent(client, a)
+    run_full_scan(client, a)
+
+    a_avatar_id = client.get("/avatars", headers=a).json()[0]["id"]
+
+    resp = client.post(
+        "/outfits", headers=b, json={"name": "stolen", "avatar_id": a_avatar_id, "items": []}
+    )
+    assert resp.status_code == 404, f"B attached A's avatar: {resp.status_code} {resp.text}"
+
+    # And B still has no outfit referencing it.
+    assert client.get("/outfits", headers=b).json() == []
+
+
+async def test_outfit_patch_cannot_adopt_another_users_avatar(client: TestClient) -> None:
+    """Guards the PATCH path against regressing into BUG-001.
+
+    OutfitPatch deliberately has no avatar_id field, so an avatar_id in the body
+    is ignored rather than adopted. This pins that down: anyone adding avatar_id
+    to OutfitPatch must add the ownership check with it, or this fails.
+    """
+    a = auth_headers(client, "frank@example.com")
+    b = auth_headers(client, "grace@example.com")
+    grant_scan_consent(client, a)
+    run_full_scan(client, a)
+    a_avatar_id = client.get("/avatars", headers=a).json()[0]["id"]
+
+    own = client.post("/outfits", headers=b, json={"name": "mine", "items": []}).json()
+    client.patch(f"/outfits/{own['id']}", headers=b, json={"avatar_id": a_avatar_id})
+
+    after = client.get(f"/outfits/{own['id']}", headers=b).json()
+    assert after["avatar_id"] is None, "PATCH adopted another user's avatar"
+
+
+async def test_outfit_rejects_unknown_garment(client: TestClient) -> None:
+    """BUG-002 — garment_id was inserted with no existence check.
+
+    On SQLite the FK is silently unenforced, so this persisted an outfit item
+    pointing at nothing; on Postgres it surfaces as an IntegrityError 500
+    instead of a 4xx.
+    """
+    import uuid as _uuid
+
+    a = auth_headers(client, "heidi@example.com")
+    resp = client.post(
+        "/outfits",
+        headers=a,
+        json={
+            "name": "ghost",
+            "items": [{"garment_id": str(_uuid.uuid4()), "layer_index": 0}],
+        },
+    )
+    assert resp.status_code == 422, f"unknown garment accepted: {resp.status_code} {resp.text}"
+
+
 async def test_measurement_signed_urls_are_owner_scoped(client: TestClient) -> None:
     a = auth_headers(client, "carol@example.com")
     grant_scan_consent(client, a)
